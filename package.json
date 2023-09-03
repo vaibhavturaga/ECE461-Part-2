@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "jest": "^29.6.4",
+    "typescript": "^5.2.2"
+  }
+}
