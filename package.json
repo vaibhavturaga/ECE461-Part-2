@@ -10,7 +10,7 @@
     "query-registry": "^2.6.0"
   },
   "scripts": {
-    "start": "ts-node api_test.ts"
+    "start": "ts-node tools/api.ts"
   },
   "devDependencies": {
     "ts-node": "^10.9.1",

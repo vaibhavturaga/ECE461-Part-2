@@ -87,23 +87,13 @@ class repoCommunicator {
   url: string | null; 
   repo: string;
   org: string; 
+  private initializationPromise: Promise<void> | null = null;
   constructor(url: string) {
     this.url = null;
     this.repo = '';
     this.org = '';
-    
+    this.initializationPromise = this.initialize(url);
     // Call an asynchronous function and wait for it to complete
-    this.initialize(url)
-      .then(() => {
-        // Now that the initialization is complete, you can call queryGithubapi or perform other actions.
-        this.queryGithubapi('')
-          .then((response)=>{
-            console.log(response)
-          })
-      })
-      .catch((error) => {
-        console.error('Initialization error:', error);
-      });
   }
 
   async initialize(url: string): Promise<void> {
@@ -122,7 +112,12 @@ class repoCommunicator {
       throw error; // Rethrow the error to propagate it to the caller
     }
   }
-  
+  async waitForInitialization(): Promise<void> {
+    if (!this.initializationPromise) {
+      return Promise.resolve();
+    }
+    return this.initializationPromise;
+  }
   async processUrl(url: string): Promise<string | null> {
     if (url.includes("npmjs")) {
       try {
@@ -182,7 +177,13 @@ class repoCommunicator {
     return null;
   }
   getissues(){
-
+    this.queryGithubapi('/issues')
+      .then((response)=>{
+        console.log(response)
+      })
+      .catch((error) => {
+        console.error('Error getting issues', error);
+      });
   }
   getstars(){
 
@@ -193,6 +194,14 @@ class repoCommunicator {
 }
 
 
-const npm: string = 'https://www.npmjs.com/package/browserify'
-const github: string = 'https://github.com/cloudinary/cloudinary_npm'
-var npmrepo = new repoCommunicator(npm)
+const npm: string = 'https://www.npmjs.com/package/browserify';
+const github: string = 'https://github.com/cloudinary/cloudinary_npm';
+(async () => {
+  const npmrepo = new repoCommunicator(github);
+
+  // Wait for the initialization to complete
+  await npmrepo.waitForInitialization();
+
+  // Now that the object is initialized, you can call instance methods like getissues
+  npmrepo.getissues();
+})();
