@@ -10,13 +10,13 @@ if (!token) {
     process.exit(1); // Exit the script with an error code
   }
 
-/*******
- * repoCommunicator
+/****************************************************************************************************************************************
+ * repoConnection
  * 1. takes in url string
  * 2. Parses string to see if it is npmjs
  * 3. If so we talk to the npm with query-register to get the github repository
  * 4. Request Github Repository. This can be separated into different functions to request for issues, contributors, etc.
- * 5. I am thinking in initilization function we can call all of the get issues, getcontributors, etc. So all api calls can be done and then we can just
+ * 5. I am thinking in a different class we can call all of the get issues, getcontributors, etc. So all api calls can be done and then we can just
  * request the class for the JSON formatted information.
  * 
  * TODO:
@@ -25,21 +25,32 @@ if (!token) {
  * 3. I think we need to think of a way to minimize requests. We could create a variable to store the JSON of each request e.g. store original request repos/org/repo in a variable
  * store request from repos/org/repo/issues to another variable. etc.
  * 4. Implement a cache? store the repo data to a file and after a certain time clear this file and refill it.
- ******/
-class repoCommunicator {
+ **************************************************************************************************************************************/
+  /* e.g. how to initialize connection
+        (async () => {
+        const npmrepo = new repoCommunicator(npm);
+
+        // Wait for the initialization to complete
+          await npmrepo.waitForInitialization();
+
+          // Now that the object is initialized, you can call instance methods like getissues
+          npmrepo.getissues();
+        })();
+  */
+class repoConnection{
   url: string | null; 
+  githubkey: string | null;
   repo: string;
-  org: string; 
+  org: string;
   private initializationPromise: Promise<void> | null = null;
-  constructor(url: string) {
+  
+  constructor(url: string, githubkey: string) {
+    this.githubkey = githubkey;
     this.url = null;
     this.repo = '';
     this.org = '';
     this.initializationPromise = this.initialize(url);
-    // Call an asynchronous function and wait for it to complete
   }
-
-  // Intializes class. This finds github url if it is an npm package, and then speerates github repo to organization and repo.
   async initialize(url: string): Promise<void> {
     try {
       const processedUrl = await this.processUrl(url);
@@ -49,38 +60,19 @@ class repoCommunicator {
         this.repo = urlParts[urlParts.length - 1].split('.')[0];
         this.url = processedUrl;
       } else {
-        console.log('Initialization failed: URL not processed.');
+        throw Error('Initialization failed: Github URL not Found.');
       }
     } catch (error) {
-      console.error('Initialization error:', error);
       throw error; // Rethrow the error to propagate it to the caller
     }
   }
-
   //This can be called from other functions when first initializing the class to know when initilization is complete. example code for when intializing instance
-  /* 
-  (async () => {
-  const npmrepo = new repoCommunicator(npm);
-
-  // Wait for the initialization to complete
-    await npmrepo.waitForInitialization();
-
-    // Now that the object is initialized, you can call instance methods like getissues
-    npmrepo.getissues();
-  })();
-  
-  */
   async waitForInitialization(): Promise<void> {
     if (!this.initializationPromise) {
       return Promise.resolve();
     }
     return this.initializationPromise;
   }
-
-  /*
-  * This Function processes the url to see if it is npm or github.
-  *
-  * */
   async processUrl(url: string): Promise<string | null> {
     if (url.includes("npmjs")) {
       try {
@@ -89,30 +81,20 @@ class repoCommunicator {
           console.log(`The GitHub repository for ${npm} is: ${githubRepoUrl}`);
           return githubRepoUrl;
         } else {
-          console.log('Repository not found');
           return null;
         }
       } catch (error) {
         if (error instanceof Error) {
-          console.error(`An error occurred: ${error.message}`);
+          throw error;
         } else {
-          console.error(`An unknown error occurred: ${error}`);
+          throw Error(`An unknown error occurred: ${error}`)
         }
-        return null;
       }
-    } else {
+    } 
+    else {
       return url;
     }
   }
-
-  /**
-   * 
-   * @param url 
-   * 
-   * This Function queries npm using getPackageManifest to get the package meta data. Includes info like repository, etc.
-   * 
-   * @returns response or null
-   */
   async queryNPM(url: string): Promise<any>{
     const urlParts: string[] = url.split('/');
     const packageName: string = urlParts[urlParts.length - 1].split('.')[0];
@@ -123,67 +105,115 @@ class repoCommunicator {
     }
     return null;
   }
-  /**
-   * 
-   * @param queryendpoint 
-   * @returns response
-   * 
-   *  This Function queries the GitHub API. It takes argument queryendpoint, this is to create a more specific api request.
-   * Will have to look most of these up but you can get information about issues and their status by using endpoint issues, can get commits info, contributors, etc.
-   */
   async queryGithubapi(queryendpoint: string): Promise<AxiosResponse<any[]> | null>{
     try{
       const axiosInstance = axios.create({
           baseURL: 'https://api.github.com/',
           headers:{
-              Authorization: `token ${token}`,
+              Authorization: `token ${this.githubkey}`,
               Accept: 'application/json'
           },
       });
-      console.log(this.org)
-      console.log(this.repo)
       const endpoint: string = `repos/${this.org}/${this.repo}${queryendpoint}`
-
       const response: AxiosResponse<any[]> = await axiosInstance.get(endpoint);
-      console.log(response)
       return response;
     }
     catch(error){
-        console.error('An error occurred Github api:', (error as Error).message);
+        throw error;
     }
-    return null;
-  }
-
-  /**
-   * The Functions below will take care of more specific api queries. getissues will call @queryGithubapi 
-   * with /issues and then store the information in this class.
-   */
-  getissues(){
-    this.queryGithubapi('/issues')
-      .then((response)=>{
-        console.log(response)
-      })
-      .catch((error) => {
-        console.error('Error getting issues', error);
-      });
-  }
-  getstars(){
-
-  }
-  getcontributors(){
-
   }
 }
 
+class repoCommunicator {
+  connection: repoConnection;
+  private initializationPromise: Promise<void> | null = null;
+  issues: any[] | null = null;
+  contributors: any[] | null = null;
+  constructor(connection: repoConnection){
+    this.connection = connection;
+    this.initializationPromise = this.retrieveAllInfo();
+  }
+  async retrieveAllInfo(): Promise<void>{
+    const asyncFunctions: (() => Promise<void>)[] = [
+      this.getissues.bind(this),
+      this.getcontributors.bind(this),
+      // Add more async functions as needed
+    ];
+    try {
+      await Promise.all(asyncFunctions.map(fn => fn()));
+    } catch (error) {
+      // Handle errors
+      throw error;
+    }
+  }
+  async compareRetrieveMethods(): Promise<void>{
+    const asyncFunctions: (() => Promise<void>)[] = [
+      this.getissues.bind(this),
+      this.getcontributors.bind(this),
+      // Add more async functions as needed
+    ];
+    try {
+      const startUsingPromiseAll = performance.now();
+      await Promise.all(asyncFunctions.map(fn => fn()));
+      const endUsingPromiseAll = performance.now();
+      const usingPromiseAllTime = endUsingPromiseAll - startUsingPromiseAll;
+      const startUsingTraditionalAwait = performance.now();
+      for (const fn of asyncFunctions) {
+        await fn();
+      }
+      const endUsingTraditionalAwait = performance.now();
+      const usingTraditionalAwaitTime = endUsingTraditionalAwait - startUsingTraditionalAwait;
+      console.log(`Promise.all time: ${usingPromiseAllTime}`)
+      console.log(`Traditional time: ${usingTraditionalAwaitTime}`)
+    } catch (error) {
+      // Handle errors
+      throw error;
+    }
+  }
+  async waitForInitialization(): Promise<void> {
+    if (!this.initializationPromise) {
+      return Promise.resolve();
+    }
+    return this.initializationPromise;
+  }
+  async getissues(): Promise<void>{
+    try{
+      const response = await this.connection.queryGithubapi('/issues');
+      if(response){
+        this.issues = response.data
+      }
+    }
+    catch(error) {
+      throw error
+    }
+  }
+  async getstars(): Promise<void>{
+
+  }
+  async getcontributors(): Promise<void>{
+    try{
+      const response = await this.connection.queryGithubapi('/contributors');
+      if(response){
+        this.contributors = response.data
+      }
+    }
+    catch(error) {
+      throw error
+    }
+  }
+}
 
 const npm: string = 'https://www.npmjs.com/package/browserify';
 const github: string = 'https://github.com/cloudinary/cloudinary_npm';
 (async () => {
-  const npmrepo = new repoCommunicator(npm);
+  const npmrepo = new repoConnection(npm, token);
 
   // Wait for the initialization to complete
   await npmrepo.waitForInitialization();
 
-  // Now that the object is initialized, you can call instance methods like getissues
-  npmrepo.getissues();
+  const getinfo = new repoCommunicator(npmrepo);
+
+  await getinfo.waitForInitialization();
+  //await getinfo.compareRetrieveMethods();
+  //console.log(getinfo.issues)
 })();
