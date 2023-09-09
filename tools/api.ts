@@ -76,9 +76,9 @@ class repoConnection{
   async processUrl(url: string): Promise<string | null> {
     if (url.includes("npmjs")) {
       try {
-        const githubRepoUrl = await this.queryNPM(npm);
+        const githubRepoUrl = await this.queryNPM(url);
         if (githubRepoUrl) {
-          console.log(`The GitHub repository for ${npm} is: ${githubRepoUrl}`);
+          //console.log(`The GitHub repository for ${url} is: ${githubRepoUrl}`);
           return githubRepoUrl;
         } else {
           return null;
@@ -122,6 +122,11 @@ class repoConnection{
         throw error;
     }
   }
+  static async create(url: string, githubkey: string): Promise<repoConnection> {
+    const instance = new repoConnection(url, githubkey);
+    await instance.waitForInitialization();
+    return instance;
+  }
 }
 
 class repoCommunicator {
@@ -137,6 +142,8 @@ class repoCommunicator {
     const asyncFunctions: (() => Promise<void>)[] = [
       this.getissues.bind(this),
       this.getcontributors.bind(this),
+      this.getCommits.bind(this),
+      this.getGeneral.bind(this),
       // Add more async functions as needed
     ];
     try {
@@ -187,9 +194,27 @@ class repoCommunicator {
       throw error
     }
   }
-  async getstars(): Promise<void>{
-
+  async getGeneral(): Promise<void>{
+    try {
+      const response = await this.connection.queryGithubapi('');
+      if (response) {
+        // Process and store the license data as needed
+      }
+    } catch (error) {
+      throw error;
+    }
   }
+  async getCommits(): Promise<void> {
+    try {
+      const response = await this.connection.queryGithubapi('/commits');
+      if (response) {
+        // Process and store the commits data as needed
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+  
   async getcontributors(): Promise<void>{
     try{
       const response = await this.connection.queryGithubapi('/contributors');
@@ -201,19 +226,41 @@ class repoCommunicator {
       throw error
     }
   }
+  static async create(connection: repoConnection): Promise<repoCommunicator> {
+    const instance = new repoCommunicator(connection);
+    await instance.waitForInitialization();
+    return instance;
+  }
 }
 
-const npm: string = 'https://www.npmjs.com/package/browserify';
-const github: string = 'https://github.com/cloudinary/cloudinary_npm';
+const urls: string[] = ['https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash',];
 (async () => {
-  const npmrepo = new repoConnection(npm, token);
+  const startUsingPromiseAll = performance.now();
+  
+  // Create an array of promises to initialize connections and communicators for each URL
+  const initializationPromises = urls.map(async (url) => {
+    const connection = await repoConnection.create(url, token);
+    const communicator = await repoCommunicator.create(connection);
+    return { connection, communicator };
+  });
+  // Use Promise.all to initialize connections and communicators concurrently for all URLs
+  const connectionsAndCommunicators = await Promise.all(initializationPromises);
 
-  // Wait for the initialization to complete
-  await npmrepo.waitForInitialization();
+  const endUsingPromiseAll = performance.now();
+  const usingPromiseAllTime = endUsingPromiseAll - startUsingPromiseAll;
+  console.log(`Promise.all time: ${usingPromiseAllTime}`);
+  
 
-  const getinfo = new repoCommunicator(npmrepo);
+  const startUsingTraditional = performance.now();
+  for(var i = 0; i < urls.length; i++){
+    const connection: repoConnection = await repoConnection.create(urls[i], token);
+    const communicator: repoCommunicator = await repoCommunicator.create(connection);
 
-  await getinfo.waitForInitialization();
+  }
+  const endUsingTraditional = performance.now();
+  const usingTraditionalTime = endUsingTraditional-startUsingTraditional;
+  console.log(`Traditional time: ${usingTraditionalTime}`)
+  
   //await getinfo.compareRetrieveMethods();
   //console.log(getinfo.issues)
 })();
