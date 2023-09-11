@@ -1,2 +1,3 @@
-import * as api from '../tools/api';
+import * as api from '../src/tools/api';
 
+// test('template', () => { TEST CODE HERE });
