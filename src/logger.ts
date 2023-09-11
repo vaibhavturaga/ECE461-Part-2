@@ -11,6 +11,9 @@ example uses: "logger.error('ERROR MESSAGE');"
 
 */
 
+// TODO: 
+// have logs output file reset every time the program is run
+
 class Logger {
   private logger: winston.Logger;
 
@@ -20,8 +23,8 @@ class Logger {
       format: winston.format.json(),
       transports: [
         new winston.transports.Console(),
-        new winston.transports.File({ filename: 'error.log', level: 'error' }),
-        new winston.transports.File({ filename: 'combined.log' }),
+        new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+        new winston.transports.File({ filename: 'logs/combined.log' }),
       ],
     });
   }
