@@ -1,7 +1,6 @@
 import axios, {AxiosResponse} from 'axios';
 import * as dotenv from 'dotenv'
 import { getPackageManifest } from 'query-registry';
-const Promise = require('bluebird');
 
 /****************************************************************************************************************************************
  * repoConnection
@@ -9,12 +8,9 @@ const Promise = require('bluebird');
  * 2. Parses string to see if it is npmjs
  * 3. If so we talk to the npm with query-register to get the github repository
  * 4. Request Github Repository. This can be separated into different functions to request for issues, contributors, etc.
- * 5. I am thinking in a different class we can call all of the get issues, getcontributors, etc. So all api calls can be done and then we can just
- * request the class for the JSON formatted information.
  * 
  * TODO:
  * 1. Error handling, can't access github repo, can't access npm package, etc.
- * 2. Specific requests and parsing. (e.g. getissues, getstars, etc.)
  * 3. I think we need to think of a way to minimize requests. We could create a variable to store the JSON of each request e.g. store original request repos/org/repo in a variable
  * store request from repos/org/repo/issues to another variable. etc.
  * 4. Implement a cache? store the repo data to a file and after a certain time clear this file and refill it.
@@ -123,7 +119,19 @@ class repoConnection{
     return instance;
   }
 }
-
+/****************************************************************************************************************************************
+ * repoCommunicator
+ * 1. takes in a repoConnection
+ * 2. Uses connection to query github api for issues, contributors, commits and general repository information. It runs all of these queries concurrently
+ * using promise.all this helps with efficiency
+ * 3. We then store the responses to this class. I am thinking we have an evlauate function that parses and calculates metrics
+ * 
+ * TODO:
+ * 1. Error handling, can't access github repo through connection, too many requests, etc.
+ * 3. I think we need to think of a way to minimize requests. We could create a variable to store the JSON of each request e.g. store original request repos/org/repo in a variable
+ * store request from repos/org/repo/issues to another variable. etc.
+ * 4. Implement a cache? store the repo data to a file and after a certain time clear this file and refill it.
+ **************************************************************************************************************************************/
 class repoCommunicator {
   connection: repoConnection;
   private initializationPromise: Promise<void> | null = null;
@@ -152,6 +160,8 @@ class repoCommunicator {
     const asyncFunctions: (() => Promise<void>)[] = [
       this.getissues.bind(this),
       this.getcontributors.bind(this),
+      this.getCommits.bind(this),
+      this.getGeneral.bind(this),
       // Add more async functions as needed
     ];
     try {
@@ -228,6 +238,28 @@ class repoCommunicator {
   }
 }
 
+
+class metricEvaluation {
+  communicator: repoCommunicator;
+  issues: any;
+  contributors: any;
+  commits: any;
+  license: any;
+  finalscore: any;
+  constructor(communicator: repoCommunicator){
+    this.communicator = communicator;
+  }
+  filterIssues(){}
+  filterContributors(){}
+  filterCommits(){}
+  filterlicense(){}
+  EvaluateBusFactor(){}
+  EvaluateRampUp(){}
+  EvaluateCorrectness(){}
+  EvaluateLicense(){}
+  EvaluateResponsivness(){}
+  Evaluatefinalscore(){}
+}
 async function setupCommunication(urls: string[]) {
   dotenv.config({ path: '.env' });
   const token: string | undefined = process.env.GITHUB_API_KEY;
@@ -245,7 +277,7 @@ async function setupCommunication(urls: string[]) {
     const communicator = await repoCommunicator.create(connection);
     return { connection, communicator };
   }));*/
-
+  const Promise = require('bluebird');
   const connectionsAndCommunicators = await Promise.map(urls, async (url: string) => {
     const connection = await repoConnection.create(url, token);
     const communicator = await repoCommunicator.create(connection);
