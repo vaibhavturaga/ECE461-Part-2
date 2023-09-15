@@ -260,6 +260,8 @@ class metricEvaluation {
   EvaluateResponsivness(){}
   Evaluatefinalscore(){}
 }
+
+
 async function setupCommunication(urls: string[]) {
   dotenv.config({ path: '.env' });
   const token: string | undefined = process.env.GITHUB_API_KEY;
