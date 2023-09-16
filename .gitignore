@@ -1,7 +1,7 @@
 # ignore .env file
 .env
-node_modules/
 dist/
-logs/
+node_modules/
 coverage/
+logs/
 package-lock.json

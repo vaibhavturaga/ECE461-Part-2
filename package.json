@@ -11,7 +11,11 @@
     "query-registry": "^2.6.0"
   },
   "scripts": {
-    "start": "ts-node src/tools/script.ts"
+    "start": "ts-node src/tools/script.ts",
+    "@types/winston": "^2.4.4",
+    "typescript": "^5.2.2",
+    "winston": "^3.10.0",
+    "test": "jest"
   },
   "devDependencies": {
     "@types/jest": "^29.5.4",
@@ -35,6 +39,7 @@
     "transform": {
       "^.+\\.(ts|tsx)$": "ts-jest"
     },
-    "verbose": true
+    "verbose": true,
+    "ts-jest": "^29.1.1"
   }
 }
