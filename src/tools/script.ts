@@ -36,6 +36,7 @@ async function setupCommunication(urls: string[]) {
         //metric.filterIssues();
         metric.getResponsiveness()
         metric.getBus();
+        metric.getlicense();
         //metric.filterlicense();
     })
   }

@@ -246,7 +246,7 @@ export class metricEvaluation {
   issues: any;
   contributors: any;
   commits: any;
-  license: any;
+  license: number = 0;
   finalscore: any;
   busFactor: number = 0;
   constructor(communicator: repoCommunicator){
@@ -285,7 +285,12 @@ export class metricEvaluation {
   }
   getlicense(){
     if(this.communicator.general){
-      console.log(this.communicator.general)
+      if('license' in this.communicator.general){
+        if(this.communicator.general.license){
+          this.license = 1
+        }
+      }
+      console.log(`license: ${this.license}`)
     }
   }
 }
