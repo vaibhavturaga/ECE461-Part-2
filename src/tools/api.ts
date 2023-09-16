@@ -238,7 +238,14 @@ export class repoCommunicator {
   }
 }
 
-
+/**
+ * metricEvaluation
+ * 1. takes in the communicator
+ * 2. filters through responses that are stored in communicator to generate metric calculations
+ * 
+ * TODO:
+ * 1. Error handling, can't find metric
+ */
 export class metricEvaluation {
   communicator: repoCommunicator;
   license: number = 0;
