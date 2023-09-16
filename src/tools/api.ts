@@ -27,13 +27,14 @@ import { getPackageManifest } from 'query-registry';
   */
 export class repoConnection{
   url: string | null;
-  npm_url: string | null = null; 
+  urlFromFile: string | null = null; 
   githubkey: string | null;
   repo: string;
   org: string;
   private initializationPromise: Promise<void> | null = null;
   
   constructor(url: string, githubkey: string) {
+    this.urlFromFile = url;
     this.githubkey = githubkey;
     this.url = null;
     this.repo = '';
@@ -64,7 +65,6 @@ export class repoConnection{
   }
   async processUrl(url: string): Promise<string | null> {
     if (url.includes("npmjs")) {
-      this.npm_url = url;
       try {
         const githubRepoUrl = await this.queryNPM(url);
         if (githubRepoUrl) {

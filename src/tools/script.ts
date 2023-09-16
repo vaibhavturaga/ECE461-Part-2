@@ -26,7 +26,7 @@ async function setupCommunication(urls: string[]) {
     // and outputs scores.
     connectionsAndCommunicators.forEach((pair: any)=>{
         let metric = new metricEvaluation(pair.communicator)
-        console.log(pair.connection.url)
+        console.log(pair.connection.urlFromFile)
         //metric.filterIssues();
         metric.getResponsiveness()
         metric.getBus();
