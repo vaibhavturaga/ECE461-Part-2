@@ -138,6 +138,7 @@ export class repoCommunicator {
   commits: any[] | null = null;
   OpenIssues: number | null = null;
   closedIssues: number | null = null;
+  general: any[] | null = null;
   constructor(connection: repoConnection){
     this.connection = connection;
     this.initializationPromise = this.retrieveAllInfo();
@@ -204,7 +205,7 @@ export class repoCommunicator {
     try {
       const response = await this.connection.queryGithubapi('');
       if (response) {
-        // Process and store the license data as needed
+        this.general = response.data
       }
     } catch (error) {
       throw error;
@@ -247,6 +248,7 @@ export class metricEvaluation {
   commits: any;
   license: any;
   finalscore: any;
+  busFactor: number = 0;
   constructor(communicator: repoCommunicator){
     this.communicator = communicator;
   }
@@ -256,14 +258,23 @@ export class metricEvaluation {
     let toDoCount: number  = 0;
     console.log(this.communicator.closedIssues)
   }
-  filterContributors(){
+  getBus(){
     if(Array.isArray(this.communicator.contributors)){
-      let commitCounts: { [username: string]: number } = {};
+      let commitList: number[] = [];
+      //let commitCounts: { [username: string]: number } = {};
       this.communicator.contributors.forEach(contributor => {
-        let login: string = contributor.author.login
-        commitCounts[login] = contributor.total;
+        //let login: string = contributor.author.login
+        //commitCounts[login] = contributor.total;
+        commitList.push(contributor.total)
     });
-    console.log(commitCounts)
+    const sortedCommits = commitList.sort((a, b) => b - a);
+    const sum = sortedCommits.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+    let current_sum = 0
+    for(let i = 0; i < sortedCommits.length && current_sum < sum/2; i++){
+        current_sum += sortedCommits[i];
+        this.busFactor += 1
+    }
+    console.log(this.busFactor)
     }
   }
   filterCommits(){
@@ -274,5 +285,9 @@ export class metricEvaluation {
       return commitDate;
     }
   }
-  filterlicense(){}
+  filterlicense(){
+    if(this.communicator.general){
+      console.log(this.communicator.general)
+    }
+  }
 }
