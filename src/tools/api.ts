@@ -127,9 +127,7 @@ export class repoConnection{
  * 
  * TODO:
  * 1. Error handling, can't access github repo through connection, too many requests, etc.
- * 3. I think we need to think of a way to minimize requests. We could create a variable to store the JSON of each request e.g. store original request repos/org/repo in a variable
- * store request from repos/org/repo/issues to another variable. etc.
- * 4. Implement a cache? store the repo data to a file and after a certain time clear this file and refill it.
+ * 2. 203 error, could also hand it in the github api function
  **************************************************************************************************************************************/
 export class repoCommunicator {
   connection: repoConnection;
@@ -243,12 +241,12 @@ export class repoCommunicator {
 
 export class metricEvaluation {
   communicator: repoCommunicator;
-  issues: any;
-  contributors: any;
-  commits: any;
   license: number = 0;
+  threshold_response: number = 3;
+  threshold_bus: number = 5;
   finalscore: any;
   busFactor: number = 0;
+  responsivness: number = 0;
   constructor(communicator: repoCommunicator){
     this.communicator = communicator;
   }
@@ -271,6 +269,7 @@ export class metricEvaluation {
         current_sum += sortedCommits[i];
         this.busFactor += 1
     }
+    this.busFactor = Math.min(1, this.busFactor/this.threshold_bus)
     console.log(`Bus ${this.busFactor}`)
     }
   }
@@ -280,7 +279,8 @@ export class metricEvaluation {
       const commitDate = new Date(mostRecentCommit.commit.author.date);
       const today = new Date();
       const diffInMonths = (today.getFullYear() - commitDate.getFullYear()) * 12 + (today.getMonth() - commitDate.getMonth());
-      console.log(`Months from recent commit ${diffInMonths}`);
+      this.responsivness = this.threshold_response / Math.max(this.threshold_response, diffInMonths)
+      console.log(`responsiveness: ${this.responsivness}`)
     }
   }
   getlicense(){

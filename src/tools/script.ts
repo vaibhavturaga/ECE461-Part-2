@@ -11,7 +11,9 @@ async function setupCommunication(urls: string[]) {
         console.error('GitHub API token not found in the .env file');
         process.exit(1); // Exit the script with an error code
       }
-
+    
+    //Initialize repositories, find their github repositories if npm, make queries to to get the api responses we need.
+    // this concurrently process 10 urls at a time
     const Promise = require('bluebird');
     const connectionsAndCommunicators = await Promise.map(urls, async (url: string) => {
       const connection = await repoConnection.create(url, token);
@@ -19,6 +21,9 @@ async function setupCommunication(urls: string[]) {
       return { connection, communicator };
     }, { concurrency: 10 });
 
+    //For each pair of connections and communicators (connection finds github api, etc. communicator uses connection to make api queries)
+    // we can create a metric instance by feeding the information from the communicator to our evaluater which filters responses
+    // and outputs scores.
     connectionsAndCommunicators.forEach((pair: any)=>{
         let metric = new metricEvaluation(pair.communicator)
         console.log(pair.connection.url)
