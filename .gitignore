@@ -1,5 +1,4 @@
 # ignore .env file
 .env
-tools
 node_modules
 dist/

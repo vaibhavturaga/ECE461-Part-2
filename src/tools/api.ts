@@ -261,10 +261,7 @@ export class metricEvaluation {
   getBus(){
     if(Array.isArray(this.communicator.contributors)){
       let commitList: number[] = [];
-      //let commitCounts: { [username: string]: number } = {};
       this.communicator.contributors.forEach(contributor => {
-        //let login: string = contributor.author.login
-        //commitCounts[login] = contributor.total;
         commitList.push(contributor.total)
     });
     const sortedCommits = commitList.sort((a, b) => b - a);
@@ -274,18 +271,19 @@ export class metricEvaluation {
         current_sum += sortedCommits[i];
         this.busFactor += 1
     }
-    console.log(this.busFactor)
+    console.log(`Bus ${this.busFactor}`)
     }
   }
-  filterCommits(){
+  getResponsiveness(){
     if(this.communicator.commits){
       const mostRecentCommit = this.communicator.commits[0];
-      const commitDate = mostRecentCommit.commit.author.date;
-      console.log(commitDate)
-      return commitDate;
+      const commitDate = new Date(mostRecentCommit.commit.author.date);
+      const today = new Date();
+      const diffInMonths = (today.getFullYear() - commitDate.getFullYear()) * 12 + (today.getMonth() - commitDate.getMonth());
+      console.log(`Months from recent commit ${diffInMonths}`);
     }
   }
-  filterlicense(){
+  getlicense(){
     if(this.communicator.general){
       console.log(this.communicator.general)
     }
