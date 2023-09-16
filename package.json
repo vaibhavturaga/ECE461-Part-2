@@ -11,7 +11,7 @@
     "query-registry": "^2.6.0"
   },
   "scripts": {
-    "start": "ts-node tools/api.ts"
+    "start": "ts-node src/tools/script.ts"
   },
   "devDependencies": {
     "@types/jest": "^29.5.4",

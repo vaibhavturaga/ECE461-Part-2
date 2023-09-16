@@ -1,5 +1,4 @@
 import axios, {AxiosResponse} from 'axios';
-import * as dotenv from 'dotenv'
 import { getPackageManifest } from 'query-registry';
 
 /****************************************************************************************************************************************
@@ -26,7 +25,7 @@ import { getPackageManifest } from 'query-registry';
           npmrepo.getissues();
         })();
   */
-class repoConnection{
+export class repoConnection{
   url: string | null;
   npm_url: string | null = null; 
   githubkey: string | null;
@@ -105,7 +104,7 @@ class repoConnection{
               Accept: 'application/json'
           },
       });
-      const endpoint: string = `repos/${this.org}/${this.repo}${queryendpoint}`
+      const endpoint: string = `repos/${this.org}/${this.repo}${queryendpoint}`;
       const response: AxiosResponse<any[]> = await axiosInstance.get(endpoint);
       return response;
     }
@@ -132,11 +131,13 @@ class repoConnection{
  * store request from repos/org/repo/issues to another variable. etc.
  * 4. Implement a cache? store the repo data to a file and after a certain time clear this file and refill it.
  **************************************************************************************************************************************/
-class repoCommunicator {
+export class repoCommunicator {
   connection: repoConnection;
   private initializationPromise: Promise<void> | null = null;
-  issues: any[] | null = null;
   contributors: any[] | null = null;
+  commits: any[] | null = null;
+  OpenIssues: number | null = null;
+  closedIssues: number | null = null;
   constructor(connection: repoConnection){
     this.connection = connection;
     this.initializationPromise = this.retrieveAllInfo();
@@ -190,10 +191,10 @@ class repoCommunicator {
   }
   async getissues(): Promise<void>{
     try{
-      const response = await this.connection.queryGithubapi('/issues');
-      if(response){
-        this.issues = response.data
-      }
+      const openIssuesResponse = await this.connection.queryGithubapi('/issues?state=open');
+      const closedIssuesResponse = await this.connection.queryGithubapi('/issues?state=closed');
+      if(openIssuesResponse){this.OpenIssues = openIssuesResponse.data.length;}
+      if(closedIssuesResponse){this.closedIssues = closedIssuesResponse.data.length;}
     }
     catch(error) {
       throw error
@@ -213,7 +214,7 @@ class repoCommunicator {
     try {
       const response = await this.connection.queryGithubapi('/commits');
       if (response) {
-        // Process and store the commits data as needed
+        this.commits = response.data;
       }
     } catch (error) {
       throw error;
@@ -222,7 +223,7 @@ class repoCommunicator {
   
   async getcontributors(): Promise<void>{
     try{
-      const response = await this.connection.queryGithubapi('/contributors');
+      const response = await this.connection.queryGithubapi('/stats/contributors');
       if(response){
         this.contributors = response.data
       }
@@ -239,7 +240,7 @@ class repoCommunicator {
 }
 
 
-class metricEvaluation {
+export class metricEvaluation {
   communicator: repoCommunicator;
   issues: any;
   contributors: any;
@@ -249,61 +250,29 @@ class metricEvaluation {
   constructor(communicator: repoCommunicator){
     this.communicator = communicator;
   }
-  filterIssues(){}
-  filterContributors(){}
-  filterCommits(){}
-  filterlicense(){}
-  EvaluateBusFactor(){}
-  EvaluateRampUp(){}
-  EvaluateCorrectness(){}
-  EvaluateLicense(){}
-  EvaluateResponsivness(){}
-  Evaluatefinalscore(){}
-}
-
-
-async function setupCommunication(urls: string[]) {
-  dotenv.config({ path: '.env' });
-  const token: string | undefined = process.env.GITHUB_API_KEY;
-
-  if (!token) {
-      console.error('GitHub API token not found in the .env file');
-      process.exit(1); // Exit the script with an error code
-    }
-  const startUsingPromiseAll = performance.now();
-  
-  // Create an array of promises to initialize connections and communicators for each URL
-  /*
-  const connectionsAndCommunicators = await Promise.all(urls.map(async (url) => {
-    const connection = await repoConnection.create(url, token);
-    const communicator = await repoCommunicator.create(connection);
-    return { connection, communicator };
-  }));*/
-  const Promise = require('bluebird');
-  const connectionsAndCommunicators = await Promise.map(urls, async (url: string) => {
-    const connection = await repoConnection.create(url, token);
-    const communicator = await repoCommunicator.create(connection);
-    return { connection, communicator };
-  }, { concurrency: 10 });
-  //console.log(connectionsAndCommunicators[0])
-  const endUsingPromiseAll = performance.now();
-  const usingPromiseAllTime = endUsingPromiseAll - startUsingPromiseAll;
-  console.log(`Promise.all time: ${usingPromiseAllTime}`);
-  
-
-  const startUsingTraditional = performance.now();
-  for(var i = 0; i < urls.length; i++){
-    const connection: repoConnection = await repoConnection.create(urls[i], token);
-    const communicator: repoCommunicator = await repoCommunicator.create(connection);
-
+  filterIssues(){
+    let completedCount: number = 0;
+    let inProgressCount: number  = 0;
+    let toDoCount: number  = 0;
+    console.log(this.communicator.closedIssues)
   }
-  const endUsingTraditional = performance.now();
-  const usingTraditionalTime = endUsingTraditional-startUsingTraditional;
-  console.log(`Traditional time: ${usingTraditionalTime}`)
-  
-  //await getinfo.compareRetrieveMethods();
-  //console.log(getinfo.issues)
+  filterContributors(){
+    if(Array.isArray(this.communicator.contributors)){
+      let commitCounts: { [username: string]: number } = {};
+      this.communicator.contributors.forEach(contributor => {
+        let login: string = contributor.author.login
+        commitCounts[login] = contributor.total;
+    });
+    console.log(commitCounts)
+    }
+  }
+  filterCommits(){
+    if(this.communicator.commits){
+      const mostRecentCommit = this.communicator.commits[0];
+      const commitDate = mostRecentCommit.commit.author.date;
+      console.log(commitDate)
+      return commitDate;
+    }
+  }
+  filterlicense(){}
 }
-
-const urls: string[] = ['https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash','https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash','https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash','https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash','https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash','https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash'];
-setupCommunication(urls);
