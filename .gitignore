@@ -1,7 +1,6 @@
 # ignore .env file
 .env
-node_modules
+node_modules/
 dist/
 logs/
 coverage/
-node_modules/
