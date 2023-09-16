@@ -1,14 +1,5 @@
 import axios, {AxiosResponse} from 'axios';
-import * as dotenv from 'dotenv'
 import { getPackageManifest } from 'query-registry';
-
-dotenv.config({ path: '.env' });
-const token: string | undefined = process.env.GITHUB_API_KEY;
-
-if (!token) {
-    console.error('GitHub API token not found in the .env file');
-    process.exit(1); // Exit the script with an error code
-  }
 
 /****************************************************************************************************************************************
  * repoConnection
@@ -16,12 +7,9 @@ if (!token) {
  * 2. Parses string to see if it is npmjs
  * 3. If so we talk to the npm with query-register to get the github repository
  * 4. Request Github Repository. This can be separated into different functions to request for issues, contributors, etc.
- * 5. I am thinking in a different class we can call all of the get issues, getcontributors, etc. So all api calls can be done and then we can just
- * request the class for the JSON formatted information.
  * 
  * TODO:
  * 1. Error handling, can't access github repo, can't access npm package, etc.
- * 2. Specific requests and parsing. (e.g. getissues, getstars, etc.)
  * 3. I think we need to think of a way to minimize requests. We could create a variable to store the JSON of each request e.g. store original request repos/org/repo in a variable
  * store request from repos/org/repo/issues to another variable. etc.
  * 4. Implement a cache? store the repo data to a file and after a certain time clear this file and refill it.
@@ -37,14 +25,16 @@ if (!token) {
           npmrepo.getissues();
         })();
   */
-class repoConnection{
-  url: string | null; 
+export class repoConnection{
+  url: string | null;
+  urlFromFile: string | null = null; 
   githubkey: string | null;
   repo: string;
   org: string;
   private initializationPromise: Promise<void> | null = null;
   
   constructor(url: string, githubkey: string) {
+    this.urlFromFile = url;
     this.githubkey = githubkey;
     this.url = null;
     this.repo = '';
@@ -76,9 +66,9 @@ class repoConnection{
   async processUrl(url: string): Promise<string | null> {
     if (url.includes("npmjs")) {
       try {
-        const githubRepoUrl = await this.queryNPM(npm);
+        const githubRepoUrl = await this.queryNPM(url);
         if (githubRepoUrl) {
-          console.log(`The GitHub repository for ${npm} is: ${githubRepoUrl}`);
+          //console.log(`The GitHub repository for ${url} is: ${githubRepoUrl}`);
           return githubRepoUrl;
         } else {
           return null;
@@ -114,7 +104,7 @@ class repoConnection{
               Accept: 'application/json'
           },
       });
-      const endpoint: string = `repos/${this.org}/${this.repo}${queryendpoint}`
+      const endpoint: string = `repos/${this.org}/${this.repo}${queryendpoint}`;
       const response: AxiosResponse<any[]> = await axiosInstance.get(endpoint);
       return response;
     }
@@ -122,13 +112,31 @@ class repoConnection{
         throw error;
     }
   }
+  static async create(url: string, githubkey: string): Promise<repoConnection> {
+    const instance = new repoConnection(url, githubkey);
+    await instance.waitForInitialization();
+    return instance;
+  }
 }
-
-class repoCommunicator {
+/****************************************************************************************************************************************
+ * repoCommunicator
+ * 1. takes in a repoConnection
+ * 2. Uses connection to query github api for issues, contributors, commits and general repository information. It runs all of these queries concurrently
+ * using promise.all this helps with efficiency
+ * 3. We then store the responses to this class. I am thinking we have an evlauate function that parses and calculates metrics
+ * 
+ * TODO:
+ * 1. Error handling, can't access github repo through connection, too many requests, etc.
+ * 2. 203 error, could also hand it in the github api function
+ **************************************************************************************************************************************/
+export class repoCommunicator {
   connection: repoConnection;
   private initializationPromise: Promise<void> | null = null;
-  issues: any[] | null = null;
   contributors: any[] | null = null;
+  commits: any[] | null = null;
+  OpenIssues: number | null = null;
+  closedIssues: number | null = null;
+  general: any[] | null = null;
   constructor(connection: repoConnection){
     this.connection = connection;
     this.initializationPromise = this.retrieveAllInfo();
@@ -137,6 +145,8 @@ class repoCommunicator {
     const asyncFunctions: (() => Promise<void>)[] = [
       this.getissues.bind(this),
       this.getcontributors.bind(this),
+      this.getCommits.bind(this),
+      this.getGeneral.bind(this),
       // Add more async functions as needed
     ];
     try {
@@ -150,6 +160,8 @@ class repoCommunicator {
     const asyncFunctions: (() => Promise<void>)[] = [
       this.getissues.bind(this),
       this.getcontributors.bind(this),
+      this.getCommits.bind(this),
+      this.getGeneral.bind(this),
       // Add more async functions as needed
     ];
     try {
@@ -178,21 +190,39 @@ class repoCommunicator {
   }
   async getissues(): Promise<void>{
     try{
-      const response = await this.connection.queryGithubapi('/issues');
-      if(response){
-        this.issues = response.data
-      }
+      const openIssuesResponse = await this.connection.queryGithubapi('/issues?state=open');
+      const closedIssuesResponse = await this.connection.queryGithubapi('/issues?state=closed');
+      if(openIssuesResponse){this.OpenIssues = openIssuesResponse.data.length;}
+      if(closedIssuesResponse){this.closedIssues = closedIssuesResponse.data.length;}
     }
     catch(error) {
       throw error
     }
   }
-  async getstars(): Promise<void>{
-
+  async getGeneral(): Promise<void>{
+    try {
+      const response = await this.connection.queryGithubapi('');
+      if (response) {
+        this.general = response.data
+      }
+    } catch (error) {
+      throw error;
+    }
   }
+  async getCommits(): Promise<void> {
+    try {
+      const response = await this.connection.queryGithubapi('/commits');
+      if (response) {
+        this.commits = response.data;
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+  
   async getcontributors(): Promise<void>{
     try{
-      const response = await this.connection.queryGithubapi('/contributors');
+      const response = await this.connection.queryGithubapi('/stats/contributors');
       if(response){
         this.contributors = response.data
       }
@@ -201,19 +231,73 @@ class repoCommunicator {
       throw error
     }
   }
+  static async create(connection: repoConnection): Promise<repoCommunicator> {
+    const instance = new repoCommunicator(connection);
+    await instance.waitForInitialization();
+    return instance;
+  }
 }
 
-const npm: string = 'https://www.npmjs.com/package/browserify';
-const github: string = 'https://github.com/cloudinary/cloudinary_npm';
-(async () => {
-  const npmrepo = new repoConnection(npm, token);
-
-  // Wait for the initialization to complete
-  await npmrepo.waitForInitialization();
-
-  const getinfo = new repoCommunicator(npmrepo);
-
-  await getinfo.waitForInitialization();
-  //await getinfo.compareRetrieveMethods();
-  //console.log(getinfo.issues)
-})();
+/**
+ * metricEvaluation
+ * 1. takes in the communicator
+ * 2. filters through responses that are stored in communicator to generate metric calculations
+ * 
+ * TODO:
+ * 1. Error handling, can't find metric
+ */
+export class metricEvaluation {
+  communicator: repoCommunicator;
+  license: number = 0;
+  threshold_response: number = 3;
+  threshold_bus: number = 5;
+  finalscore: any;
+  busFactor: number = 0;
+  responsivness: number = 0;
+  constructor(communicator: repoCommunicator){
+    this.communicator = communicator;
+  }
+  filterIssues(){
+    let completedCount: number = 0;
+    let inProgressCount: number  = 0;
+    let toDoCount: number  = 0;
+    console.log(this.communicator.closedIssues)
+  }
+  getBus(){
+    if(Array.isArray(this.communicator.contributors)){
+      let commitList: number[] = [];
+      this.communicator.contributors.forEach(contributor => {
+        commitList.push(contributor.total)
+    });
+    const sortedCommits = commitList.sort((a, b) => b - a);
+    const sum = sortedCommits.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+    let current_sum = 0
+    for(let i = 0; i < sortedCommits.length && current_sum < sum/2; i++){
+        current_sum += sortedCommits[i];
+        this.busFactor += 1
+    }
+    this.busFactor = Math.min(1, this.busFactor/this.threshold_bus)
+    console.log(`Bus ${this.busFactor}`)
+    }
+  }
+  getResponsiveness(){
+    if(this.communicator.commits){
+      const mostRecentCommit = this.communicator.commits[0];
+      const commitDate = new Date(mostRecentCommit.commit.author.date);
+      const today = new Date();
+      const diffInMonths = (today.getFullYear() - commitDate.getFullYear()) * 12 + (today.getMonth() - commitDate.getMonth());
+      this.responsivness = this.threshold_response / Math.max(this.threshold_response, diffInMonths)
+      console.log(`responsiveness: ${this.responsivness}`)
+    }
+  }
+  getlicense(){
+    if(this.communicator.general){
+      if('license' in this.communicator.general){
+        if(this.communicator.general.license){
+          this.license = 1
+        }
+      }
+      console.log(`license: ${this.license}`)
+    }
+  }
+}

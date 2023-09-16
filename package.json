@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "axios": "^1.5.0",
+    "bluebird": "^3.7.2",
     "dotenv": "^16.3.1",
     "isomorphic-unfetch": "^4.0.2",
     "node-fetch": "^3.3.2",
@@ -10,7 +11,7 @@
     "query-registry": "^2.6.0"
   },
   "scripts": {
-    "start": "ts-node tools/api.ts"
+    "start": "ts-node src/tools/script.ts"
   },
   "devDependencies": {
     "@types/jest": "^29.5.4",
@@ -20,8 +21,17 @@
     "typescript": "^5.2.2"
   },
   "jest": {
-    "testMatch": ["<rootDir>/tests/**/*.test.ts"], 
-    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
+    "testMatch": [
+      "<rootDir>/tests/**/*.test.ts"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ],
     "transform": {
       "^.+\\.(ts|tsx)$": "ts-jest"
     },
