@@ -1,5 +1,5 @@
 import {repoConnection} from './api'
-import {repoCommunicator }from './api'
+import {repoCommunicator} from './api'
 import {metricEvaluation} from './api'
 import * as dotenv from 'dotenv'
 

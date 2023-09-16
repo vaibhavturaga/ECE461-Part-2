@@ -41,6 +41,7 @@ export class repoConnection{
     this.org = '';
     this.initializationPromise = this.initialize(url);
   }
+
   async initialize(url: string): Promise<void> {
     try {
       const processedUrl = await this.processUrl(url);
@@ -56,6 +57,7 @@ export class repoConnection{
       throw error; // Rethrow the error to propagate it to the caller
     }
   }
+
   //This can be called from other functions when first initializing the class to know when initilization is complete. example code for when intializing instance
   async waitForInitialization(): Promise<void> {
     if (!this.initializationPromise) {
@@ -63,6 +65,7 @@ export class repoConnection{
     }
     return this.initializationPromise;
   }
+
   async processUrl(url: string): Promise<string | null> {
     if (url.includes("npmjs")) {
       try {
@@ -85,6 +88,7 @@ export class repoConnection{
       return url;
     }
   }
+
   async queryNPM(url: string): Promise<any>{
     const urlParts: string[] = url.split('/');
     const packageName: string = urlParts[urlParts.length - 1].split('.')[0];
@@ -95,6 +99,7 @@ export class repoConnection{
     }
     return null;
   }
+
   async queryGithubapi(queryendpoint: string): Promise<AxiosResponse<any[]> | null>{
     try{
       const axiosInstance = axios.create({
@@ -112,12 +117,14 @@ export class repoConnection{
         throw error;
     }
   }
+
   static async create(url: string, githubkey: string): Promise<repoConnection> {
     const instance = new repoConnection(url, githubkey);
     await instance.waitForInitialization();
     return instance;
   }
 }
+
 /****************************************************************************************************************************************
  * repoCommunicator
  * 1. takes in a repoConnection
@@ -141,6 +148,7 @@ export class repoCommunicator {
     this.connection = connection;
     this.initializationPromise = this.retrieveAllInfo();
   }
+
   async retrieveAllInfo(): Promise<void>{
     const asyncFunctions: (() => Promise<void>)[] = [
       this.getissues.bind(this),
@@ -156,6 +164,7 @@ export class repoCommunicator {
       throw error;
     }
   }
+
   async compareRetrieveMethods(): Promise<void>{
     const asyncFunctions: (() => Promise<void>)[] = [
       this.getissues.bind(this),
@@ -182,12 +191,14 @@ export class repoCommunicator {
       throw error;
     }
   }
+
   async waitForInitialization(): Promise<void> {
     if (!this.initializationPromise) {
       return Promise.resolve();
     }
     return this.initializationPromise;
   }
+
   async getissues(): Promise<void>{
     try{
       const openIssuesResponse = await this.connection.queryGithubapi('/issues?state=open');
@@ -199,6 +210,7 @@ export class repoCommunicator {
       throw error
     }
   }
+
   async getGeneral(): Promise<void>{
     try {
       const response = await this.connection.queryGithubapi('');
@@ -209,6 +221,7 @@ export class repoCommunicator {
       throw error;
     }
   }
+
   async getCommits(): Promise<void> {
     try {
       const response = await this.connection.queryGithubapi('/commits');
@@ -231,6 +244,7 @@ export class repoCommunicator {
       throw error
     }
   }
+
   static async create(connection: repoConnection): Promise<repoCommunicator> {
     const instance = new repoCommunicator(connection);
     await instance.waitForInitialization();
