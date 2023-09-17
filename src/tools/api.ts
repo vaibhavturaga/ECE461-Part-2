@@ -10,7 +10,7 @@ import logger from '../logger';
  * 4. Request Github Repository. This can be separated into different functions to request for issues, contributors, etc.
  * 
  * TODO:
- * 1. Error handling, can't access github repo, can't access npm package, etc.
+ * 1. can't access github repo, can't access npm package, etc.
  * 3. I think we need to think of a way to minimize requests. We could create a variable to store the JSON of each request e.g. store original request repos/org/repo in a variable
  * store request from repos/org/repo/issues to another variable. etc.
  * 4. Implement a cache? store the repo data to a file and after a certain time clear this file and refill it.
