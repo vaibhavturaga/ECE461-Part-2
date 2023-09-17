@@ -269,22 +269,56 @@ export class metricEvaluation {
   license: number = 0;
   threshold_response: number = 3;
   threshold_bus: number = 5;
+  threshold_rampup = 8;
   finalscore: any;
   busFactor: number = 0;
   responsivness: number = 0;
+  rampUp: number = 0;
+  correctness: number = 0;
+  score: number = 0;
   constructor(communicator: repoCommunicator){
     this.communicator = communicator;
   }
 
-  filterIssues(){
-    let completedCount: number = 0;
-    let inProgressCount: number  = 0;
-    let toDoCount: number  = 0;
-    if(this.communicator.closedIssues) {
-      logger.info(this.communicator.closedIssues.toString())
+  getCorrectness(){
+    if(!this.communicator.general){
+      return;
     }
+    if('open_issues_count' in this.communicator.general && 'watchers_count' in this.communicator.general){
+      const open_issues: any = this.communicator.general.open_issues_count;
+      const watchers_count: any = this.communicator.general.watchers_count;
+      this.correctness = Math.log(open_issues) / Math.log(watchers_count)
+    }
+    logger.info(`correctness ${this.correctness}`)
   }
-
+  getRampUp(){
+    if(!this.communicator.contributors){
+      return;
+    }
+    //console.log(this.communicator.contributors)
+    const firstCommitWeeks = this.communicator.contributors.map(contributor => {
+      for (const week of contributor.weeks) {
+        if (week.c > 0) {
+          return week.w;
+        }
+      }
+      return null;
+    }).filter(Boolean);
+    if(firstCommitWeeks.length === 0){
+      return null;
+    }
+    const sortedWeeks = firstCommitWeeks.slice().sort((a, b) => a - b);
+    let differences = []
+    for (let i = 1; i < sortedWeeks.length; i++) {
+      const diff = sortedWeeks[i] - sortedWeeks[i - 1];
+      differences.push(diff);
+    }
+  
+    const average_seconds =  differences.reduce((acc, diff) => acc + diff, 0) / differences.length;
+    const average_weeks = average_seconds / 60 / 60 / 24 / 7
+    this.rampUp = average_weeks? Math.min(1, this.threshold_rampup/average_weeks): 0;
+    logger.info(`Ramp Up ${this.rampUp}`)
+  }
   getBus(){
     if(Array.isArray(this.communicator.contributors)){
       let commitList: number[] = [];
@@ -323,5 +357,11 @@ export class metricEvaluation {
       }
       logger.info(`license: ${this.license}`)
     }
+  }
+
+  netScore(){
+    this.score = 0.2 * this.busFactor + 0.3 * this.responsivness + 0.1 * this.license + 0.1 * this.rampUp + 0.3 * this.correctness;
+    logger.info(`Net Score: ${this.score}`)
+    return this.score;
   }
 }
