@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Get the current directory
+current_dir="$(cd "$(dirname "$0")" && pwd)"
+
+# Navigate to the /dist folder and execute index.js
+cd "$current_dir/dist" || exit
+node index.js "$@"
