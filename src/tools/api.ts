@@ -1,6 +1,6 @@
 import axios, {AxiosResponse} from 'axios';
 import { getPackageManifest } from 'query-registry';
-import logger from './logger';
+import logger from '../logger';
 
 /****************************************************************************************************************************************
  * repoConnection
@@ -275,12 +275,16 @@ export class metricEvaluation {
   constructor(communicator: repoCommunicator){
     this.communicator = communicator;
   }
+
   filterIssues(){
     let completedCount: number = 0;
     let inProgressCount: number  = 0;
     let toDoCount: number  = 0;
-    logger.info(this.communicator.closedIssues)
+    if(this.communicator.closedIssues) {
+      logger.info(this.communicator.closedIssues.toString())
+    }
   }
+
   getBus(){
     if(Array.isArray(this.communicator.contributors)){
       let commitList: number[] = [];
@@ -298,6 +302,7 @@ export class metricEvaluation {
     logger.info(`Bus ${this.busFactor}`)
     }
   }
+
   getResponsiveness(){
     if(this.communicator.commits){
       const mostRecentCommit = this.communicator.commits[0];
@@ -308,6 +313,7 @@ export class metricEvaluation {
       logger.info(`responsiveness: ${this.responsivness}`)
     }
   }
+
   getlicense(){
     if(this.communicator.general){
       if('license' in this.communicator.general){
