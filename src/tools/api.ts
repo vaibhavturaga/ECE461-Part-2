@@ -1,5 +1,6 @@
 import axios, {AxiosResponse} from 'axios';
 import { getPackageManifest } from 'query-registry';
+import logger from './logger';
 
 /****************************************************************************************************************************************
  * repoConnection
@@ -13,6 +14,9 @@ import { getPackageManifest } from 'query-registry';
  * 3. I think we need to think of a way to minimize requests. We could create a variable to store the JSON of each request e.g. store original request repos/org/repo in a variable
  * store request from repos/org/repo/issues to another variable. etc.
  * 4. Implement a cache? store the repo data to a file and after a certain time clear this file and refill it.
+ * 
+ * Completed:
+ * 1. error handling, imported logger and swapped any console writes with logger calls
  **************************************************************************************************************************************/
   /* e.g. how to initialize connection
         (async () => {
@@ -51,7 +55,7 @@ export class repoConnection{
         this.repo = urlParts[urlParts.length - 1].split('.')[0];
         this.url = processedUrl;
       } else {
-        throw Error('Initialization failed: Github URL not Found.');
+        throw logger.error('Initialization failed: Github URL not Found.');
       }
     } catch (error) {
       throw error; // Rethrow the error to propagate it to the caller
@@ -71,7 +75,7 @@ export class repoConnection{
       try {
         const githubRepoUrl = await this.queryNPM(url);
         if (githubRepoUrl) {
-          //console.log(`The GitHub repository for ${url} is: ${githubRepoUrl}`);
+          //logger.info(`The GitHub repository for ${url} is: ${githubRepoUrl}`);
           return githubRepoUrl;
         } else {
           return null;
@@ -80,7 +84,7 @@ export class repoConnection{
         if (error instanceof Error) {
           throw error;
         } else {
-          throw Error(`An unknown error occurred: ${error}`)
+          throw logger.error(`An unknown error occurred: ${error}`)
         }
       }
     } 
@@ -184,8 +188,8 @@ export class repoCommunicator {
       }
       const endUsingTraditionalAwait = performance.now();
       const usingTraditionalAwaitTime = endUsingTraditionalAwait - startUsingTraditionalAwait;
-      console.log(`Promise.all time: ${usingPromiseAllTime}`)
-      console.log(`Traditional time: ${usingTraditionalAwaitTime}`)
+      logger.info(`Promise.all time: ${usingPromiseAllTime}`)
+      logger.info(`Traditional time: ${usingTraditionalAwaitTime}`)
     } catch (error) {
       // Handle errors
       throw error;
@@ -275,7 +279,7 @@ export class metricEvaluation {
     let completedCount: number = 0;
     let inProgressCount: number  = 0;
     let toDoCount: number  = 0;
-    console.log(this.communicator.closedIssues)
+    logger.info(this.communicator.closedIssues)
   }
   getBus(){
     if(Array.isArray(this.communicator.contributors)){
@@ -291,7 +295,7 @@ export class metricEvaluation {
         this.busFactor += 1
     }
     this.busFactor = Math.min(1, this.busFactor/this.threshold_bus)
-    console.log(`Bus ${this.busFactor}`)
+    logger.info(`Bus ${this.busFactor}`)
     }
   }
   getResponsiveness(){
@@ -301,7 +305,7 @@ export class metricEvaluation {
       const today = new Date();
       const diffInMonths = (today.getFullYear() - commitDate.getFullYear()) * 12 + (today.getMonth() - commitDate.getMonth());
       this.responsivness = this.threshold_response / Math.max(this.threshold_response, diffInMonths)
-      console.log(`responsiveness: ${this.responsivness}`)
+      logger.info(`responsiveness: ${this.responsivness}`)
     }
   }
   getlicense(){
@@ -311,7 +315,7 @@ export class metricEvaluation {
           this.license = 1
         }
       }
-      console.log(`license: ${this.license}`)
+      logger.info(`license: ${this.license}`)
     }
   }
 }

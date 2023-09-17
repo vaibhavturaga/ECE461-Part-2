@@ -2,4 +2,19 @@
 module.exports = {
     preset: 'ts-jest', // use ts-jest for typescript
     testEnvironment: 'node', // use node for testing
+    "testMatch": [
+        "<rootDir>/tests/**/*.test.ts"
+    ],
+    "moduleFileExtensions": [
+        "ts",
+        "tsx",
+        "js",
+        "jsx",
+        "json",
+        "node"
+    ],
+    "transform": {
+        "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "verbose": true
 }
