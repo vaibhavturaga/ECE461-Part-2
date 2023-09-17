@@ -40,7 +40,7 @@ jobs:
           --config .eslintrc.js
           --ext .ts
           --format @microsoft/eslint-formatter-sarif
-          --output-file eslint-results.sarif
+          --output-file results.sarif
         continue-on-error: true
 
       - name: Upload analysis results to GitHub
