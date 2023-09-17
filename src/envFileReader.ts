@@ -26,8 +26,8 @@ export const readEnv = async () => {
     return {token:token, logLevel:logLevel, logFile:logFile};
 };
 
-export const testEnv = async () => {
+/*export const testEnv = async () => {
     var env = await readEnv();
     console.log(env);
 }
-testEnv();
+testEnv();*/
