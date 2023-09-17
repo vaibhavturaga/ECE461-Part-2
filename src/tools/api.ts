@@ -287,9 +287,9 @@ export class metricEvaluation {
     if('open_issues_count' in this.communicator.general && 'watchers_count' in this.communicator.general){
       const open_issues: any = this.communicator.general.open_issues_count;
       const watchers_count: any = this.communicator.general.watchers_count;
-      this.correctness = Math.log(open_issues) / Math.log(watchers_count)
+      this.correctness = Math.max(1 - Math.log(open_issues) / Math.log(watchers_count), 0)
     }
-    logger.info(`correctness ${this.correctness}`)
+    logger.info(`Correctness: ${this.correctness}`)
   }
   getRampUp(){
     if(!this.communicator.contributors){
@@ -317,7 +317,7 @@ export class metricEvaluation {
     const average_seconds =  differences.reduce((acc, diff) => acc + diff, 0) / differences.length;
     const average_weeks = average_seconds / 60 / 60 / 24 / 7
     this.rampUp = average_weeks? Math.min(1, this.threshold_rampup/average_weeks): 0;
-    logger.info(`Ramp Up ${this.rampUp}`)
+    logger.info(`Ramp Up: ${this.rampUp}`)
   }
   getBus(){
     if(Array.isArray(this.communicator.contributors)){
@@ -333,7 +333,7 @@ export class metricEvaluation {
         this.busFactor += 1
     }
     this.busFactor = Math.min(1, this.busFactor/this.threshold_bus)
-    logger.info(`Bus ${this.busFactor}`)
+    logger.info(`Bus Factor: ${this.busFactor}`)
     }
   }
 
@@ -344,7 +344,7 @@ export class metricEvaluation {
       const today = new Date();
       const diffInMonths = (today.getFullYear() - commitDate.getFullYear()) * 12 + (today.getMonth() - commitDate.getMonth());
       this.responsivness = this.threshold_response / Math.max(this.threshold_response, diffInMonths)
-      logger.info(`responsiveness: ${this.responsivness}`)
+      logger.info(`Responsivene Maintainer: ${this.responsivness}`)
     }
   }
 
@@ -355,7 +355,7 @@ export class metricEvaluation {
           this.license = 1
         }
       }
-      logger.info(`license: ${this.license}`)
+      logger.info(`License: ${this.license}`)
     }
   }
 
