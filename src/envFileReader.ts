@@ -1,9 +1,9 @@
 import * as fsPromise from 'fs/promises'; 
 
 export const readEnv = async () => {
-    var token = "";
-    var logLevel = "";
-    var logFile = "";
+    let token = "";
+    let logLevel = "";
+    let logFile = "";
     
     await fsPromise.open("./.env", 'r')
         .then(async (response) => {
@@ -19,7 +19,7 @@ export const readEnv = async () => {
                 }
             }
         })
-        .catch((error) => {
+        .catch(() => {
             console.error(`.env file not found`)
         });
 
