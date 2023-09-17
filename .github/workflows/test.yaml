@@ -1,7 +1,7 @@
 name: test
 on:
   pull_request:
-    branches: [ main, hgruler-github-actions ]
+    branches: [ main ]
 
 jobs:
   test:
