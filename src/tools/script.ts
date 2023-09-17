@@ -2,13 +2,14 @@ import {repoConnection} from './api'
 import {repoCommunicator} from './api'
 import {metricEvaluation} from './api'
 import * as dotenv from 'dotenv'
+import logger from '../logger';
 
 async function setupCommunication(urls: string[]) {
     dotenv.config({ path: '.env' });
     const token: string | undefined = process.env.GITHUB_API_KEY;
   
     if (!token) {
-        console.error('GitHub API token not found in the .env file');
+        logger.error('GitHub API token not found in the .env file');
         process.exit(1); // Exit the script with an error code
       }
     
@@ -26,7 +27,7 @@ async function setupCommunication(urls: string[]) {
     // and outputs scores.
     connectionsAndCommunicators.forEach((pair: any)=>{
         let metric = new metricEvaluation(pair.communicator)
-        console.log(pair.connection.urlFromFile)
+        logger.info(pair.connection.urlFromFile)
         //metric.filterIssues();
         metric.getResponsiveness()
         metric.getBus();
