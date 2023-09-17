@@ -6,6 +6,7 @@ current_dir="$(cd "$(dirname "$0")" && pwd)"
 # Check if the first argument is "install" and run npm install
 if [ "$1" = "install" ]; then
     npm install
+    tsc
 else
     # Navigate to the /dist folder and execute index.js
     cd "$current_dir/dist" || exit
