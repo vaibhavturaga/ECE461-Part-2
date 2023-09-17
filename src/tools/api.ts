@@ -58,7 +58,8 @@ export class repoConnection{
         throw logger.error('Initialization failed: Github URL not Found.');
       }
     } catch (error) {
-      throw error; // Rethrow the error to propagate it to the caller
+      logger.error(`${error}`); // Rethrow the error to propagate it to the caller
+      process.exit(1);
     }
   }
 
@@ -82,10 +83,11 @@ export class repoConnection{
         }
       } catch (error) {
         if (error instanceof Error) {
-          throw error;
+          logger.error(`${error}`); // Rethrow the error to propagate it to the caller
         } else {
-          throw logger.error(`An unknown error occurred: ${error}`)
+          logger.error(`An unknown error occurred: ${error}`)
         }
+        process.exit(1);
       }
     } 
     else {
@@ -118,7 +120,8 @@ export class repoConnection{
       return response;
     }
     catch(error){
-        throw error;
+      logger.error(`${error}`);
+      process.exit(1);
     }
   }
 
@@ -165,34 +168,8 @@ export class repoCommunicator {
       await Promise.all(asyncFunctions.map(fn => fn()));
     } catch (error) {
       // Handle errors
-      throw error;
-    }
-  }
-
-  async compareRetrieveMethods(): Promise<void>{
-    const asyncFunctions: (() => Promise<void>)[] = [
-      this.getissues.bind(this),
-      this.getcontributors.bind(this),
-      this.getCommits.bind(this),
-      this.getGeneral.bind(this),
-      // Add more async functions as needed
-    ];
-    try {
-      const startUsingPromiseAll = performance.now();
-      await Promise.all(asyncFunctions.map(fn => fn()));
-      const endUsingPromiseAll = performance.now();
-      const usingPromiseAllTime = endUsingPromiseAll - startUsingPromiseAll;
-      const startUsingTraditionalAwait = performance.now();
-      for (const fn of asyncFunctions) {
-        await fn();
-      }
-      const endUsingTraditionalAwait = performance.now();
-      const usingTraditionalAwaitTime = endUsingTraditionalAwait - startUsingTraditionalAwait;
-      logger.info(`Promise.all time: ${usingPromiseAllTime}`)
-      logger.info(`Traditional time: ${usingTraditionalAwaitTime}`)
-    } catch (error) {
-      // Handle errors
-      throw error;
+      logger.error(`${error}`);
+      process.exit(1);
     }
   }
 
@@ -211,7 +188,8 @@ export class repoCommunicator {
       if(closedIssuesResponse){this.closedIssues = closedIssuesResponse.data.length;}
     }
     catch(error) {
-      throw error
+      logger.error(`${error}`);
+      process.exit(1);
     }
   }
 
@@ -222,7 +200,8 @@ export class repoCommunicator {
         this.general = response.data
       }
     } catch (error) {
-      throw error;
+      logger.error(`${error}`);
+      process.exit(1);
     }
   }
 
@@ -233,7 +212,8 @@ export class repoCommunicator {
         this.commits = response.data;
       }
     } catch (error) {
-      throw error;
+      logger.error(`${error}`);
+      process.exit(1);
     }
   }
   
@@ -245,7 +225,8 @@ export class repoCommunicator {
       }
     }
     catch(error) {
-      throw error
+      logger.error(`${error}`);
+      process.exit(1);
     }
   }
 
@@ -269,8 +250,7 @@ export class metricEvaluation {
   license: number = 0;
   threshold_response: number = 3;
   threshold_bus: number = 5;
-  threshold_rampup = 8;
-  finalscore: any;
+  threshold_rampup: number = 8;
   busFactor: number = 0;
   responsivness: number = 0;
   rampUp: number = 0;
