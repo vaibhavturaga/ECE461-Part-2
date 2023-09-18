@@ -10,13 +10,13 @@ import logger from '../logger';
  * 4. Request Github Repository. This can be separated into different functions to request for issues, contributors, etc.
  * 
  * TODO:
- * 1. can't access github repo, can't access npm package, etc.
+ * 1. better error handling: can't access github repo, can't access npm package, etc.
  * 3. I think we need to think of a way to minimize requests. We could create a variable to store the JSON of each request e.g. store original request repos/org/repo in a variable
  * store request from repos/org/repo/issues to another variable. etc.
  * 4. Implement a cache? store the repo data to a file and after a certain time clear this file and refill it.
  * 
  * Completed:
- * 1. error handling, imported logger and swapped any console writes with logger calls
+ * 1. imported logger and swapped any console writes with logger calls
  **************************************************************************************************************************************/
   /* e.g. how to initialize connection
         (async () => {
@@ -58,6 +58,7 @@ export class repoConnection{
         throw logger.error('Initialization failed: Github URL not Found.');
       }
     } catch (error) {
+      logger.error(`Initialization failed: ${error}`)
       throw error; // Rethrow the error to propagate it to the caller
     }
   }
@@ -104,6 +105,8 @@ export class repoConnection{
     return null;
   }
 
+  // ex goal: https://api.github.com/repos/browserify/browserify
+  // ex endpoint: '/commits', '', '/issues?state=closed', '/issues?state=open'
   async queryGithubapi(queryendpoint: string): Promise<AxiosResponse<any[]> | null>{
     try{
       const axiosInstance = axios.create({
@@ -118,7 +121,8 @@ export class repoConnection{
       return response;
     }
     catch(error){
-        throw error;
+        logger.error(`Error: ${error}`);
+        return null;
     }
   }
 
