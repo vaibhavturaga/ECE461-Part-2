@@ -28,10 +28,12 @@ async function setupCommunication(urls: string[]) {
     connectionsAndCommunicators.forEach((pair: any)=>{
         let metric = new metricEvaluation(pair.communicator)
         logger.info(pair.connection.urlFromFile)
-        //metric.filterIssues();
+        metric.getCorrectness();
         metric.getResponsiveness()
         metric.getBus();
         metric.getlicense();
+        metric.getRampUp();
+        metric.netScore();
     })
   }
   

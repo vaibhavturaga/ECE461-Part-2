@@ -58,8 +58,8 @@ export class repoConnection{
         throw logger.error('Initialization failed: Github URL not Found.');
       }
     } catch (error) {
-      logger.error(`Initialization failed: ${error}`)
-      throw error; // Rethrow the error to propagate it to the caller
+      logger.error(`${error}`); // Rethrow the error to propagate it to the caller
+      process.exit(1);
     }
   }
 
@@ -83,10 +83,11 @@ export class repoConnection{
         }
       } catch (error) {
         if (error instanceof Error) {
-          throw error;
+          logger.error(`${error}`); // Rethrow the error to propagate it to the caller
         } else {
-          throw logger.error(`An unknown error occurred: ${error}`)
+          logger.error(`An unknown error occurred: ${error}`)
         }
+        process.exit(1);
       }
     } 
     else {
@@ -121,8 +122,8 @@ export class repoConnection{
       return response;
     }
     catch(error){
-        logger.error(`Error: ${error}`);
-        return null;
+      logger.error(`${error}`);
+      process.exit(1);
     }
   }
 
@@ -169,34 +170,8 @@ export class repoCommunicator {
       await Promise.all(asyncFunctions.map(fn => fn()));
     } catch (error) {
       // Handle errors
-      throw error;
-    }
-  }
-
-  async compareRetrieveMethods(): Promise<void>{
-    const asyncFunctions: (() => Promise<void>)[] = [
-      this.getissues.bind(this),
-      this.getcontributors.bind(this),
-      this.getCommits.bind(this),
-      this.getGeneral.bind(this),
-      // Add more async functions as needed
-    ];
-    try {
-      const startUsingPromiseAll = performance.now();
-      await Promise.all(asyncFunctions.map(fn => fn()));
-      const endUsingPromiseAll = performance.now();
-      const usingPromiseAllTime = endUsingPromiseAll - startUsingPromiseAll;
-      const startUsingTraditionalAwait = performance.now();
-      for (const fn of asyncFunctions) {
-        await fn();
-      }
-      const endUsingTraditionalAwait = performance.now();
-      const usingTraditionalAwaitTime = endUsingTraditionalAwait - startUsingTraditionalAwait;
-      logger.info(`Promise.all time: ${usingPromiseAllTime}`)
-      logger.info(`Traditional time: ${usingTraditionalAwaitTime}`)
-    } catch (error) {
-      // Handle errors
-      throw error;
+      logger.error(`${error}`);
+      process.exit(1);
     }
   }
 
@@ -215,7 +190,8 @@ export class repoCommunicator {
       if(closedIssuesResponse){this.closedIssues = closedIssuesResponse.data.length;}
     }
     catch(error) {
-      throw error
+      logger.error(`${error}`);
+      process.exit(1);
     }
   }
 
@@ -226,7 +202,8 @@ export class repoCommunicator {
         this.general = response.data
       }
     } catch (error) {
-      throw error;
+      logger.error(`${error}`);
+      process.exit(1);
     }
   }
 
@@ -237,7 +214,8 @@ export class repoCommunicator {
         this.commits = response.data;
       }
     } catch (error) {
-      throw error;
+      logger.error(`${error}`);
+      process.exit(1);
     }
   }
   
@@ -249,7 +227,8 @@ export class repoCommunicator {
       }
     }
     catch(error) {
-      throw error
+      logger.error(`${error}`);
+      process.exit(1);
     }
   }
 
@@ -273,22 +252,55 @@ export class metricEvaluation {
   license: number = 0;
   threshold_response: number = 3;
   threshold_bus: number = 5;
-  finalscore: any;
+  threshold_rampup: number = 8;
   busFactor: number = 0;
   responsivness: number = 0;
+  rampUp: number = 0;
+  correctness: number = 0;
+  score: number = 0;
   constructor(communicator: repoCommunicator){
     this.communicator = communicator;
   }
 
-  filterIssues(){
-    let completedCount: number = 0;
-    let inProgressCount: number  = 0;
-    let toDoCount: number  = 0;
-    if(this.communicator.closedIssues) {
-      logger.info(this.communicator.closedIssues.toString())
+  getCorrectness(){
+    if(!this.communicator.general){
+      return;
     }
+    if('open_issues_count' in this.communicator.general && 'watchers_count' in this.communicator.general){
+      const open_issues: any = this.communicator.general.open_issues_count;
+      const watchers_count: any = this.communicator.general.watchers_count;
+      this.correctness = Math.max(1 - Math.log(open_issues) / Math.log(watchers_count), 0)
+    }
+    logger.info(`Correctness: ${this.correctness}`)
   }
-
+  getRampUp(){
+    if(!this.communicator.contributors){
+      return;
+    }
+    //console.log(this.communicator.contributors)
+    const firstCommitWeeks = this.communicator.contributors.map(contributor => {
+      for (const week of contributor.weeks) {
+        if (week.c > 0) {
+          return week.w;
+        }
+      }
+      return null;
+    }).filter(Boolean);
+    if(firstCommitWeeks.length === 0){
+      return null;
+    }
+    const sortedWeeks = firstCommitWeeks.slice().sort((a, b) => a - b);
+    let differences = []
+    for (let i = 1; i < sortedWeeks.length; i++) {
+      const diff = sortedWeeks[i] - sortedWeeks[i - 1];
+      differences.push(diff);
+    }
+  
+    const average_seconds =  differences.reduce((acc, diff) => acc + diff, 0) / differences.length;
+    const average_weeks = average_seconds / 60 / 60 / 24 / 7
+    this.rampUp = average_weeks? Math.min(1, this.threshold_rampup/average_weeks): 0;
+    logger.info(`Ramp Up: ${this.rampUp}`)
+  }
   getBus(){
     if(Array.isArray(this.communicator.contributors)){
       let commitList: number[] = [];
@@ -303,7 +315,7 @@ export class metricEvaluation {
         this.busFactor += 1
     }
     this.busFactor = Math.min(1, this.busFactor/this.threshold_bus)
-    logger.info(`Bus ${this.busFactor}`)
+    logger.info(`Bus Factor: ${this.busFactor}`)
     }
   }
 
@@ -314,7 +326,7 @@ export class metricEvaluation {
       const today = new Date();
       const diffInMonths = (today.getFullYear() - commitDate.getFullYear()) * 12 + (today.getMonth() - commitDate.getMonth());
       this.responsivness = this.threshold_response / Math.max(this.threshold_response, diffInMonths)
-      logger.info(`responsiveness: ${this.responsivness}`)
+      logger.info(`Responsivene Maintainer: ${this.responsivness}`)
     }
   }
 
@@ -325,7 +337,13 @@ export class metricEvaluation {
           this.license = 1
         }
       }
-      logger.info(`license: ${this.license}`)
+      logger.info(`License: ${this.license}`)
     }
+  }
+
+  netScore(){
+    this.score = 0.2 * this.busFactor + 0.3 * this.responsivness + 0.1 * this.license + 0.1 * this.rampUp + 0.3 * this.correctness;
+    logger.info(`Net Score: ${this.score}`)
+    return this.score;
   }
 }
