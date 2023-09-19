@@ -23,39 +23,34 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const winston = __importStar(require("winston"));
-/*
-
-This file defines the "logger" object from the class Logger.
-The "logger" object has methods .info(string), .warn(string), and .error(string)
-
-To use "logger" in your typescript file, import it like this: "import logger from './logger';"
-
-example uses: "logger.error('ERROR MESSAGE');"
-
-*/
-// TODO: 
-// have logs output file reset every time the program is run
-class Logger {
-    constructor() {
-        this.logger = winston.createLogger({
-            level: 'info',
-            format: winston.format.json(),
-            transports: [
-                new winston.transports.Console(),
-                new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-                new winston.transports.File({ filename: 'logs/combined.log' }),
-            ],
-        });
-    }
-    info(message) {
-        this.logger.info(message);
-    }
-    warn(message) {
-        this.logger.warn(message);
-    }
-    error(message) {
-        this.logger.error(message);
-    }
+exports.readEnv = void 0;
+const fsPromise = __importStar(require("fs/promises"));
+const readEnv = async () => {
+    var token = "";
+    var logLevel = "";
+    var logFile = "";
+    await fsPromise.open("./.env", 'r')
+        .then(async (response) => {
+        for await (const line of response.readLines()) {
+            if (line.includes("GITHUB_TOKEN=")) {
+                token = line.replace("GITHUB_TOKEN=", "");
+            }
+            else if (line.includes("LOG_LEVEL=")) {
+                logLevel = line.replace("LOG_LEVEL=", "");
+            }
+            else if (line.includes("LOG_FILE=")) {
+                logFile = line.replace("LOG_FILE=", "");
+            }
+        }
+    })
+        .catch((error) => {
+        console.error(`.env file not found`);
+    });
+    return { token: token, logLevel: logLevel, logFile: logFile };
+};
+exports.readEnv = readEnv;
+/*export const testEnv = async () => {
+    var env = await readEnv();
+    console.log(env);
 }
-exports.default = new Logger();
+testEnv();*/

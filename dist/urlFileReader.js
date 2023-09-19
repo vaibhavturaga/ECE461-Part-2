@@ -23,39 +23,26 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const winston = __importStar(require("winston"));
+exports.readURLs = void 0;
+const fsPromise = __importStar(require("fs/promises"));
+const readURLs = async (fileName) => {
+    const urls = [];
+    await fsPromise.open(fileName, 'r')
+        .then(async (response) => {
+        for await (const line of response.readLines()) {
+            urls.push(line);
+        }
+    })
+        .catch((error) => {
+        console.error(`File not found at: ${fileName}`);
+    });
+    return urls;
+};
+exports.readURLs = readURLs;
 /*
-
-This file defines the "logger" object from the class Logger.
-The "logger" object has methods .info(string), .warn(string), and .error(string)
-
-To use "logger" in your typescript file, import it like this: "import logger from './logger';"
-
-example uses: "logger.error('ERROR MESSAGE');"
-
-*/
-// TODO: 
-// have logs output file reset every time the program is run
-class Logger {
-    constructor() {
-        this.logger = winston.createLogger({
-            level: 'info',
-            format: winston.format.json(),
-            transports: [
-                new winston.transports.Console(),
-                new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-                new winston.transports.File({ filename: 'logs/combined.log' }),
-            ],
-        });
-    }
-    info(message) {
-        this.logger.info(message);
-    }
-    warn(message) {
-        this.logger.warn(message);
-    }
-    error(message) {
-        this.logger.error(message);
-    }
+export const testURLs = async () => {
+    var urls = await readURLs("C:/Users/hdogg/Desktop/ECE 461/urlFile.txt");
+    console.log(urls);
 }
-exports.default = new Logger();
+
+testURLs();*/ 

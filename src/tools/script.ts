@@ -4,9 +4,9 @@ import {metricEvaluation} from './api'
 import * as dotenv from 'dotenv'
 import logger from '../logger';
 
-async function setupCommunication(urls: string[]) {
-    dotenv.config({ path: '.env' });
-    const token: string | undefined = process.env.GITHUB_API_KEY;
+export async function beginEvaluation(urls: string[], token: string) {
+    //dotenv.config({ path: '.env' });
+    //const token: string | undefined = process.env.GITHUB_API_KEY;
   
     if (!token) {
         logger.error('GitHub API token not found in the .env file');
@@ -28,14 +28,20 @@ async function setupCommunication(urls: string[]) {
     connectionsAndCommunicators.forEach((pair: any)=>{
         let metric = new metricEvaluation(pair.communicator)
         logger.info(pair.connection.urlFromFile)
+        metric.getBus();
+        try{
+          metric.getRampUp();
+        }
+        catch(error){
+          console.log(metric.communicator.contributors)
+          process.exit(1)
+        }
         metric.getCorrectness();
         metric.getResponsiveness()
-        metric.getBus();
         metric.getlicense();
-        metric.getRampUp();
         metric.netScore();
     })
   }
   
-  const urls: string[] = ['https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash'];
-  setupCommunication(urls);
+  //const urls: string[] = ['https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash'];
+  //beginEvaluation(urls);

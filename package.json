@@ -1,14 +1,17 @@
 {
   "dependencies": {
+    "20": "^1.0.0",
     "axios": "^1.5.0",
     "bluebird": "^3.7.2",
+    "commander": "^11.0.0",
     "dotenv": "^16.3.1",
     "isomorphic-unfetch": "^4.0.2",
     "node-fetch": "^3.3.2",
     "npm-api": "^1.0.1",
     "npm-registry-fetch": "^16.0.0",
     "package-json": "^8.1.1",
-    "query-registry": "^2.6.0"
+    "query-registry": "^2.6.0",
+    "typescript": "^5.2.2"
   },
   "scripts": {
     "start": "ts-node src/tools/script.ts",
@@ -23,7 +26,6 @@
     "@types/winston": "^2.4.4",
     "jest": "^29.6.4",
     "ts-jest": "^29.1.1",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.2.2"
+    "ts-node": "^10.9.1"
   }
 }
