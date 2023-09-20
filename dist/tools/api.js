@@ -269,6 +269,7 @@ class metricEvaluation {
     }
     getCorrectness() {
         if (!this.communicator.general) {
+            logger_1.default.error(`API failed to return repository statistics for url: ${this.communicator.connection.url}`);
             return;
         }
         if ('open_issues_count' in this.communicator.general && 'watchers_count' in this.communicator.general) {
@@ -279,7 +280,7 @@ class metricEvaluation {
     }
     getRampUp() {
         if (!this.communicator.contributors || !Array.isArray(this.communicator.contributors)) {
-            console.log(this.communicator.contributors);
+            logger_1.default.error(`API failed to return contributor information for url: ${this.communicator.connection.url}`);
             return;
         }
         //console.log(this.communicator.contributors)

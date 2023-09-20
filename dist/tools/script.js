@@ -35,5 +35,5 @@ async function beginEvaluation(urls, token) {
     });
 }
 exports.beginEvaluation = beginEvaluation;
-const urls = ['https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash'];
-beginEvaluation(urls, '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');
+//const urls: string[] = ['https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash'];
+//beginEvaluation(urls, );
