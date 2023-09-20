@@ -274,6 +274,7 @@ export class metricEvaluation {
 
   getCorrectness(){
     if(!this.communicator.general){
+      logger.error(`API failed to return repository statistics for url: ${this.communicator.connection.url}`)
       return;
     }
     if('open_issues_count' in this.communicator.general && 'watchers_count' in this.communicator.general){
