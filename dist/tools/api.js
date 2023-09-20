@@ -37,6 +37,7 @@ const logger_1 = __importDefault(require("../logger"));
 class repoConnection {
     constructor(url, githubkey) {
         this.urlFromFile = null;
+        this.error_occurred = false;
         this.initializationPromise = null;
         this.urlFromFile = url;
         this.githubkey = githubkey;
@@ -55,12 +56,13 @@ class repoConnection {
                 this.url = processedUrl;
             }
             else {
-                throw logger_1.default.error('Initialization failed: Github URL not Found.');
+                logger_1.default.error('Initialization failed: Github URL not Found.');
+                this.error_occurred = true;
             }
         }
         catch (error) {
             logger_1.default.error(`${error}`); // Rethrow the error to propagate it to the caller
-            process.exit(1);
+            this.error_occurred = true;
         }
     }
     //This can be called from other functions when first initializing the class to know when initilization is complete. example code for when intializing instance
@@ -89,7 +91,8 @@ class repoConnection {
                 else {
                     logger_1.default.error(`An unknown error occurred: ${error}`);
                 }
-                process.exit(1);
+                this.error_occurred = true;
+                return null;
             }
         }
         else {
@@ -122,7 +125,9 @@ class repoConnection {
         }
         catch (error) {
             logger_1.default.error(`${error}`);
-            process.exit(1);
+            this.error_occurred = true;
+            // process.exit(1);
+            return null;
         }
     }
     static async create(url, githubkey) {
@@ -152,7 +157,9 @@ class repoCommunicator {
         this.closedIssues = null;
         this.general = null;
         this.connection = connection;
-        this.initializationPromise = this.retrieveAllInfo();
+        if (!this.connection.error_occurred) {
+            this.initializationPromise = this.retrieveAllInfo();
+        }
     }
     async retrieveAllInfo() {
         const asyncFunctions = [
@@ -190,7 +197,6 @@ class repoCommunicator {
         }
         catch (error) {
             logger_1.default.error(`${error}`);
-            process.exit(1);
         }
     }
     async getGeneral() {
@@ -202,7 +208,6 @@ class repoCommunicator {
         }
         catch (error) {
             logger_1.default.error(`${error}`);
-            process.exit(1);
         }
     }
     async getCommits() {
@@ -214,7 +219,6 @@ class repoCommunicator {
         }
         catch (error) {
             logger_1.default.error(`${error}`);
-            process.exit(1);
         }
     }
     async getcontributors() {
@@ -226,7 +230,6 @@ class repoCommunicator {
         }
         catch (error) {
             logger_1.default.error(`${error}`);
-            process.exit(1);
         }
     }
     static async create(connection) {
@@ -256,6 +259,12 @@ class metricEvaluation {
         this.correctness = 0;
         this.score = 0;
         this.communicator = communicator;
+        this.getBus();
+        this.getRampUp();
+        this.getCorrectness();
+        this.getResponsiveness();
+        this.getlicense();
+        this.netScore();
     }
     getCorrectness() {
         if (!this.communicator.general) {
@@ -266,10 +275,9 @@ class metricEvaluation {
             const watchers_count = this.communicator.general.watchers_count;
             this.correctness = Math.max(1 - Math.log(open_issues) / Math.log(watchers_count), 0);
         }
-        logger_1.default.info(`Correctness: ${this.correctness}`);
     }
     getRampUp() {
-        if (!this.communicator.contributors) {
+        if (!this.communicator.contributors || !Array.isArray(this.communicator.contributors)) {
             return;
         }
         //console.log(this.communicator.contributors)
@@ -293,9 +301,12 @@ class metricEvaluation {
         const average_seconds = differences.reduce((acc, diff) => acc + diff, 0) / differences.length;
         const average_weeks = average_seconds / 60 / 60 / 24 / 7;
         this.rampUp = average_weeks ? Math.min(1, this.threshold_rampup / average_weeks) : 0;
-        logger_1.default.info(`Ramp Up: ${this.rampUp}`);
+        //logger.info(`Ramp Up: ${this.rampUp}`)
     }
     getBus() {
+        if (!this.communicator.contributors) {
+            return;
+        }
         if (Array.isArray(this.communicator.contributors)) {
             let commitList = [];
             this.communicator.contributors.forEach(contributor => {
@@ -309,7 +320,7 @@ class metricEvaluation {
                 this.busFactor += 1;
             }
             this.busFactor = Math.min(1, this.busFactor / this.threshold_bus);
-            logger_1.default.info(`Bus Factor: ${this.busFactor}`);
+            // logger.info(`Bus Factor: ${this.busFactor}`)
         }
     }
     getResponsiveness() {
@@ -319,7 +330,7 @@ class metricEvaluation {
             const today = new Date();
             const diffInMonths = (today.getFullYear() - commitDate.getFullYear()) * 12 + (today.getMonth() - commitDate.getMonth());
             this.responsivness = this.threshold_response / Math.max(this.threshold_response, diffInMonths);
-            logger_1.default.info(`Responsivene Maintainer: ${this.responsivness}`);
+            //  logger.info(`Responsivene Maintainer: ${this.responsivness}`)
         }
     }
     getlicense() {
@@ -329,13 +340,21 @@ class metricEvaluation {
                     this.license = 1;
                 }
             }
-            logger_1.default.info(`License: ${this.license}`);
+            //  logger.info(`License: ${this.license}`)
         }
     }
     netScore() {
         this.score = 0.2 * this.busFactor + 0.3 * this.responsivness + 0.1 * this.license + 0.1 * this.rampUp + 0.3 * this.correctness;
-        logger_1.default.info(`Net Score: ${this.score}`);
+        // logger.info(`Net Score: ${this.score}`)
         return this.score;
+    }
+    logAll() {
+        logger_1.default.info(`Bus Factor: ${this.busFactor}`);
+        logger_1.default.info(`Ramp Up: ${this.rampUp}`);
+        logger_1.default.info(`Correctness: ${this.correctness}`);
+        logger_1.default.info(`Responsivene Maintainer: ${this.responsivness}`);
+        logger_1.default.info(`License: ${this.license}`);
+        logger_1.default.info(`Net Score: ${this.score}`);
     }
 }
 exports.metricEvaluation = metricEvaluation;

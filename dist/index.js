@@ -30,12 +30,11 @@ program
     }
 });
 program
-    .command('URL_FILE')
-    .description('Process a URL file')
+    .argument('<URL_FILE>', 'Absolute file location to file containing URLs')
     .action(async (urlFile) => {
-    console.log(`Processing URL file: ${JSON.stringify(urlFile, null, 2)}`);
+    console.log(`Processing URL file: ${urlFile}`);
     // Your URL file processing logic here
-    const env_var = (0, envFileReader_1.readEnv)();
+    const env_var = await (0, envFileReader_1.readEnv)();
     const urlList = await (0, urlFileReader_1.readURLs)(urlFile);
     await (0, script_1.beginEvaluation)(urlList, env_var.token);
 });

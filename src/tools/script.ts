@@ -26,22 +26,13 @@ export async function beginEvaluation(urls: string[], token: string) {
     // we can create a metric instance by feeding the information from the communicator to our evaluater which filters responses
     // and outputs scores.
     connectionsAndCommunicators.forEach((pair: any)=>{
-        let metric = new metricEvaluation(pair.communicator)
         logger.info(pair.connection.urlFromFile)
-        metric.getBus();
-        try{
-          metric.getRampUp();
-        }
-        catch(error){
-          console.log(metric.communicator.contributors)
-          process.exit(1)
-        }
-        metric.getCorrectness();
-        metric.getResponsiveness()
-        metric.getlicense();
-        metric.netScore();
+        let metric = new metricEvaluation(pair.communicator)
+        //console.log(metric.busFactor)
+        //console.log(metric.communicator.contributors)
+        metric.logAll();
     })
   }
   
-  //const urls: string[] = ['https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash'];
-  //beginEvaluation(urls);
+  const urls: string[] = ['https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash'];
+  beginEvaluation(urls, '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');

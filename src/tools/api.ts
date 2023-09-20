@@ -35,6 +35,7 @@ export class repoConnection{
   githubkey: string | null;
   repo: string;
   org: string;
+  error_occurred: boolean = false;
   private initializationPromise: Promise<void> | null = null;
   
   constructor(url: string, githubkey: string) {
@@ -55,11 +56,12 @@ export class repoConnection{
         this.repo = urlParts[urlParts.length - 1].split('.')[0];
         this.url = processedUrl;
       } else {
-        throw logger.error('Initialization failed: Github URL not Found.');
+        logger.error('Initialization failed: Github URL not Found.');
+        this.error_occurred = true;
       }
     } catch (error) {
       logger.error(`${error}`); // Rethrow the error to propagate it to the caller
-      process.exit(1);
+      this.error_occurred = true;
     }
   }
 
@@ -87,7 +89,8 @@ export class repoConnection{
         } else {
           logger.error(`An unknown error occurred: ${error}`)
         }
-        process.exit(1);
+        this.error_occurred = true;
+        return null;
       }
     } 
     else {
@@ -123,7 +126,9 @@ export class repoConnection{
     }
     catch(error){
       logger.error(`${error}`);
-      process.exit(1);
+      this.error_occurred = true;
+     // process.exit(1);
+      return null;
     }
   }
 
@@ -155,7 +160,9 @@ export class repoCommunicator {
   general: any[] | null = null;
   constructor(connection: repoConnection){
     this.connection = connection;
-    this.initializationPromise = this.retrieveAllInfo();
+    if(!this.connection.error_occurred){
+      this.initializationPromise = this.retrieveAllInfo();
+    }
   }
 
   async retrieveAllInfo(): Promise<void>{
@@ -191,7 +198,6 @@ export class repoCommunicator {
     }
     catch(error) {
       logger.error(`${error}`);
-      process.exit(1);
     }
   }
 
@@ -203,7 +209,6 @@ export class repoCommunicator {
       }
     } catch (error) {
       logger.error(`${error}`);
-      process.exit(1);
     }
   }
 
@@ -215,7 +220,6 @@ export class repoCommunicator {
       }
     } catch (error) {
       logger.error(`${error}`);
-      process.exit(1);
     }
   }
   
@@ -224,11 +228,11 @@ export class repoCommunicator {
       const response = await this.connection.queryGithubapi('/stats/contributors');
       if(response){
         this.contributors = response.data
+        //console.log(response.data)
       }
     }
     catch(error) {
       logger.error(`${error}`);
-      process.exit(1);
     }
   }
 
@@ -260,6 +264,12 @@ export class metricEvaluation {
   score: number = 0;
   constructor(communicator: repoCommunicator){
     this.communicator = communicator;
+    this.getBus();
+    this.getRampUp();
+    this.getCorrectness();
+    this.getResponsiveness()
+    this.getlicense();
+    this.netScore();
   }
 
   getCorrectness(){
@@ -271,10 +281,10 @@ export class metricEvaluation {
       const watchers_count: any = this.communicator.general.watchers_count;
       this.correctness = Math.max(1 - Math.log(open_issues) / Math.log(watchers_count), 0)
     }
-    logger.info(`Correctness: ${this.correctness}`)
   }
   getRampUp(){
-    if(!this.communicator.contributors){
+    if(!this.communicator.contributors || !Array.isArray(this.communicator.contributors)){
+      console.log(this.communicator.contributors)
       return;
     }
     //console.log(this.communicator.contributors)
@@ -299,14 +309,18 @@ export class metricEvaluation {
     const average_seconds =  differences.reduce((acc, diff) => acc + diff, 0) / differences.length;
     const average_weeks = average_seconds / 60 / 60 / 24 / 7
     this.rampUp = average_weeks? Math.min(1, this.threshold_rampup/average_weeks): 0;
-    logger.info(`Ramp Up: ${this.rampUp}`)
+    //logger.info(`Ramp Up: ${this.rampUp}`)
   }
   getBus(){
+    if(!this.communicator.contributors){
+      return;
+    }
     if(Array.isArray(this.communicator.contributors)){
       let commitList: number[] = [];
       this.communicator.contributors.forEach(contributor => {
         commitList.push(contributor.total)
     });
+    //console.log(commitList)
     const sortedCommits = commitList.sort((a, b) => b - a);
     const sum = sortedCommits.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
     let current_sum = 0
@@ -315,7 +329,7 @@ export class metricEvaluation {
         this.busFactor += 1
     }
     this.busFactor = Math.min(1, this.busFactor/this.threshold_bus)
-    logger.info(`Bus Factor: ${this.busFactor}`)
+   // logger.info(`Bus Factor: ${this.busFactor}`)
     }
   }
 
@@ -326,7 +340,7 @@ export class metricEvaluation {
       const today = new Date();
       const diffInMonths = (today.getFullYear() - commitDate.getFullYear()) * 12 + (today.getMonth() - commitDate.getMonth());
       this.responsivness = this.threshold_response / Math.max(this.threshold_response, diffInMonths)
-      logger.info(`Responsivene Maintainer: ${this.responsivness}`)
+    //  logger.info(`Responsivene Maintainer: ${this.responsivness}`)
     }
   }
 
@@ -337,13 +351,21 @@ export class metricEvaluation {
           this.license = 1
         }
       }
-      logger.info(`License: ${this.license}`)
+    //  logger.info(`License: ${this.license}`)
     }
   }
 
   netScore(){
     this.score = 0.2 * this.busFactor + 0.3 * this.responsivness + 0.1 * this.license + 0.1 * this.rampUp + 0.3 * this.correctness;
-    logger.info(`Net Score: ${this.score}`)
+   // logger.info(`Net Score: ${this.score}`)
     return this.score;
+  }
+  logAll(){
+    logger.info(`Bus Factor: ${this.busFactor}`)
+    logger.info(`Ramp Up: ${this.rampUp}`)
+    logger.info(`Correctness: ${this.correctness}`)
+    logger.info(`Responsivene Maintainer: ${this.responsivness}`)
+    logger.info(`License: ${this.license}`)
+    logger.info(`Net Score: ${this.score}`)
   }
 }

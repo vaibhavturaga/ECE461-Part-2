@@ -29,20 +29,16 @@ async function beginEvaluation(urls, token) {
     connectionsAndCommunicators.forEach((pair) => {
         let metric = new api_3.metricEvaluation(pair.communicator);
         logger_1.default.info(pair.connection.urlFromFile);
+        //console.log(metric.communicator.contributors)
         metric.getBus();
-        try {
-            metric.getRampUp();
-        }
-        catch (error) {
-            console.log(metric.communicator.contributors);
-            process.exit(1);
-        }
+        metric.getRampUp();
         metric.getCorrectness();
         metric.getResponsiveness();
         metric.getlicense();
         metric.netScore();
+        metric.logAll();
     });
 }
 exports.beginEvaluation = beginEvaluation;
-//const urls: string[] = ['https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash'];
-//beginEvaluation(urls);
+const urls = ['https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash'];
+beginEvaluation(urls, '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');
