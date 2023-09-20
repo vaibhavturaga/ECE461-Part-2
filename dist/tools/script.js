@@ -27,13 +27,8 @@ async function beginEvaluation(urls, token) {
     // we can create a metric instance by feeding the information from the communicator to our evaluater which filters responses
     // and outputs scores.
     connectionsAndCommunicators.forEach((pair) => {
-        logger_1.default.info(pair.connection.urlFromFile);
         let metric = new api_3.metricEvaluation(pair.communicator);
-        //console.log(metric.busFactor)
-        //console.log(metric.communicator.contributors)
         metric.logAll();
     });
 }
 exports.beginEvaluation = beginEvaluation;
-//const urls: string[] = ['https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash'];
-//beginEvaluation(urls, );

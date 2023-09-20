@@ -358,12 +358,10 @@ class metricEvaluation {
         return this.score;
     }
     logAll() {
-        logger_1.default.info(`Bus Factor: ${this.busFactor}`);
-        logger_1.default.info(`Ramp Up: ${this.rampUp}`);
-        logger_1.default.info(`Correctness: ${this.correctness}`);
-        logger_1.default.info(`Responsivene Maintainer: ${this.responsivness}`);
-        logger_1.default.info(`License: ${this.license}`);
-        logger_1.default.info(`Net Score: ${this.score}`);
+        const output = { "URL": this.communicator.connection.url, "NET_SCORE": this.score, "RAMP_UP_SCORE": this.rampUp, "CORRECTNESS_SCORE": this.correctness, "BUS_FACTOR_SCORE": this.busFactor, "RESPONSIVE_MAINTAINER_SCORE": this.responsivness, "LICENSE_SCORE": this.license
+        };
+        const outputString = JSON.stringify(output, null, 2).replace('/\n', '"');
+        console.log(outputString);
     }
 }
 exports.metricEvaluation = metricEvaluation;
