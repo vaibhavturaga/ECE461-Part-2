@@ -274,7 +274,7 @@ export class metricEvaluation {
 
   getCorrectness(){
     if(!this.communicator.general){
-      logger.error(`API failed to return repository statistics for url: ${this.communicator.connection.url}`)
+      logger.error(`API failed to return Correctness information for url: ${this.communicator.connection.url}`)
       return;
     }
     if('open_issues_count' in this.communicator.general && 'watchers_count' in this.communicator.general){
@@ -285,7 +285,7 @@ export class metricEvaluation {
   }
   getRampUp(){
     if(!this.communicator.contributors || !Array.isArray(this.communicator.contributors)){
-      logger.error(`API failed to return contributor information for url: ${this.communicator.connection.url}`)
+      logger.error(`API failed to return Ramp Up (contributor) information for url: ${this.communicator.connection.url}`)
       return;
     }
     //console.log(this.communicator.contributors)
@@ -314,6 +314,7 @@ export class metricEvaluation {
   }
   getBus(){
     if(!this.communicator.contributors){
+      logger.error(`API failed to return Bus Factor (contributor) information for url: ${this.communicator.connection.url}`)
       return;
     }
     if(Array.isArray(this.communicator.contributors)){
@@ -335,25 +336,31 @@ export class metricEvaluation {
   }
 
   getResponsiveness(){
-    if(this.communicator.commits){
+    if(!this.communicator.commits){
+      logger.error(`API failed to return responsiveness information for url: ${this.communicator.connection.url}`)
+      return;
+    }
       const mostRecentCommit = this.communicator.commits[0];
       const commitDate = new Date(mostRecentCommit.commit.author.date);
       const today = new Date();
       const diffInMonths = (today.getFullYear() - commitDate.getFullYear()) * 12 + (today.getMonth() - commitDate.getMonth());
       this.responsivness = this.threshold_response / Math.max(this.threshold_response, diffInMonths)
     //  logger.info(`Responsivene Maintainer: ${this.responsivness}`)
-    }
+    
   }
 
   getlicense(){
-    if(this.communicator.general){
+    if(!this.communicator.general){
+      logger.error(`API failed to return clicense information for url: ${this.communicator.connection.url}`)
+      return;
+    }
       if('license' in this.communicator.general){
         if(this.communicator.general.license){
           this.license = 1
         }
       }
     //  logger.info(`License: ${this.license}`)
-    }
+    
   }
 
   netScore(){

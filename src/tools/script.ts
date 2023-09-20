@@ -33,6 +33,7 @@ export async function beginEvaluation(urls: string[], token: string) {
         metric.logAll();
     })
   }
-  
+  //dotenv.config({ path: '.env' });
+  //const token: string | undefined = process.env.GITHUB_API_KEY;
   //const urls: string[] = ['https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash'];
   //beginEvaluation(urls, );
