@@ -27,15 +27,10 @@ async function beginEvaluation(urls, token) {
     // we can create a metric instance by feeding the information from the communicator to our evaluater which filters responses
     // and outputs scores.
     connectionsAndCommunicators.forEach((pair) => {
-        let metric = new api_3.metricEvaluation(pair.communicator);
         logger_1.default.info(pair.connection.urlFromFile);
+        let metric = new api_3.metricEvaluation(pair.communicator);
+        //console.log(metric.busFactor)
         //console.log(metric.communicator.contributors)
-        metric.getBus();
-        metric.getRampUp();
-        metric.getCorrectness();
-        metric.getResponsiveness();
-        metric.getlicense();
-        metric.netScore();
         metric.logAll();
     });
 }

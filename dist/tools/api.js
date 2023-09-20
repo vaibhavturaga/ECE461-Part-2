@@ -226,6 +226,7 @@ class repoCommunicator {
             const response = await this.connection.queryGithubapi('/stats/contributors');
             if (response) {
                 this.contributors = response.data;
+                //console.log(response.data)
             }
         }
         catch (error) {
@@ -278,6 +279,7 @@ class metricEvaluation {
     }
     getRampUp() {
         if (!this.communicator.contributors || !Array.isArray(this.communicator.contributors)) {
+            console.log(this.communicator.contributors);
             return;
         }
         //console.log(this.communicator.contributors)
@@ -312,6 +314,7 @@ class metricEvaluation {
             this.communicator.contributors.forEach(contributor => {
                 commitList.push(contributor.total);
             });
+            //console.log(commitList)
             const sortedCommits = commitList.sort((a, b) => b - a);
             const sum = sortedCommits.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
             let current_sum = 0;

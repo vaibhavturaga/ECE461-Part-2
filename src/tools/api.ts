@@ -284,7 +284,7 @@ export class metricEvaluation {
   }
   getRampUp(){
     if(!this.communicator.contributors || !Array.isArray(this.communicator.contributors)){
-      console.log(this.communicator.contributors)
+      logger.error(`API failed to return contributor information for url: ${this.communicator.connection.url}`)
       return;
     }
     //console.log(this.communicator.contributors)
