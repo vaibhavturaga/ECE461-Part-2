@@ -116,17 +116,35 @@ class repoConnection {
                 baseURL: 'https://api.github.com/',
                 headers: {
                     Authorization: `token ${this.githubkey}`,
-                    Accept: 'application/json'
+                    Accept: 'application/json',
+                    'X-GitHub-Api-Version': '2022-11-28', // Add the version header here
                 },
             });
             const endpoint = `repos/${this.org}/${this.repo}${queryendpoint}`;
-            const response = await axiosInstance.get(endpoint);
+            let response;
+            let count = 10; // Maximum retry count for 202 responses
+            let retries = 0;
+            do {
+                response = await axiosInstance.get(endpoint);
+                if (response.status === 202) {
+                    // If the response is 202, it means the request is still processing.
+                    // Wait for a while before retrying, and decrement the count.
+                    count--;
+                    await new Promise((resolve) => setTimeout(resolve, 1000)); // Adjust the polling interval as needed.
+                }
+                else if (response.status === 403) {
+                    // Implement exponential backoff for 403 responses.
+                    retries++;
+                    const maxRetryDelay = 60000; // Maximum delay between retries (in milliseconds).
+                    const retryDelay = Math.min(Math.pow(2, retries) * 1000, maxRetryDelay); // Exponential backoff formula.
+                    await new Promise((resolve) => setTimeout(resolve, retryDelay));
+                }
+            } while ((response.status === 202 && count > 0) || response.status === 403);
             return response;
         }
         catch (error) {
             logger_1.default.error(`${error}`);
             this.error_occurred = true;
-            // process.exit(1);
             return null;
         }
     }
@@ -226,7 +244,7 @@ class repoCommunicator {
             const response = await this.connection.queryGithubapi('/stats/contributors');
             if (response) {
                 this.contributors = response.data;
-                //console.log(response.data)
+                //console.log(`${this.connection.url} ${response.status}`)
             }
         }
         catch (error) {
@@ -360,7 +378,7 @@ class metricEvaluation {
     logAll() {
         const output = { "URL": this.communicator.connection.url, "NET_SCORE": this.score, "RAMP_UP_SCORE": this.rampUp, "CORRECTNESS_SCORE": this.correctness, "BUS_FACTOR_SCORE": this.busFactor, "RESPONSIVE_MAINTAINER_SCORE": this.responsivness, "LICENSE_SCORE": this.license
         };
-        const outputString = JSON.stringify(output, null, 2).replace('/\n', '"');
+        const outputString = JSON.stringify(output, null, 2).replace('\n', '"');
         console.log(outputString);
     }
 }
