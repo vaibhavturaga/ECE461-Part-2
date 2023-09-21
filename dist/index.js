@@ -32,7 +32,7 @@ program
 program
     .argument('<URL_FILE>', 'Absolute file location to file containing URLs')
     .action(async (urlFile) => {
-    console.log(`Processing URL file: ${urlFile}`);
+    //console.log(`Processing URL file: ${urlFile}`);
     // Your URL file processing logic here
     const env_var = await (0, envFileReader_1.readEnv)();
     const urlList = await (0, urlFileReader_1.readURLs)(urlFile);
@@ -57,5 +57,5 @@ program
         process.exit(1);
     }
 });
-console.log('Parsing Arguments');
+//console.log('Parsing Arguments')
 program.parse(process.argv);

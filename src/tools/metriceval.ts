@@ -125,9 +125,10 @@ export class metricEvaluation {
       return this.score;
     }
     logAll(){
-      const output: object = { "URL": this.communicator.connection.url, "NET_SCORE": this.score, "RAMP_UP_SCORE": this.rampUp, "CORRECTNESS_SCORE": this.correctness, "BUS_FACTOR_SCORE": this.busFactor, "RESPONSIVE_MAINTAINER_SCORE": this.responsivness, "LICENSE_SCORE": this.license
+      const output: object = {"URL": this.communicator.connection.url, "NET_SCORE": this.score, "RAMP_UP_SCORE": this.rampUp, "CORRECTNESS_SCORE": this.correctness, "BUS_FACTOR_SCORE": this.busFactor, "RESPONSIVE_MAINTAINER_SCORE": this.responsivness, "LICENSE_SCORE": this.license
       };
-      const outputString:string = JSON.stringify(output, null, 2).replace('\n', '"'); 
+      const outputString: string = `{"URL": ${this.communicator.connection.url}, "NET_SCORE": ${this.score}, "RAMP_UP_SCORE": ${this.rampUp}, "CORRECTNESS_SCORE": ${this.correctness}, "BUS_FACTOR_SCORE": ${this.busFactor}, "RESPONSIVE_MAINTAINER_SCORE": ${this.responsivness}, "LICENSE_SCORE": ${this.license}}`;
+      //const outputString:string = JSON.stringify(output, null, 2).replace('\n', ''); 
       console.log(outputString)
     }
   }
