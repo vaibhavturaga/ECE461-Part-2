@@ -1,13 +1,12 @@
 import logger from '../logger';
 import { repoCommunicator } from './api';
-/**
+/**************************************************************************************************
  * metricEvaluation
- * 1. takes in the communicator
- * 2. filters through responses that are stored in communicator to generate metric calculations
- * 
- * TODO:
- * 1. Error handling, can't find metric
- */
+ * 1. Takes in the communicator class to access repository responses
+ * 2. Filters through responses that are stored in communicator to generate metric calculations
+ * 3. Logs all Evaluation metrics to console
+ * 4. If it cannot find metric due to inappropriate responses. Metric will default to 0.
+ **************************************************************************************************/
 export class metricEvaluation {
     communicator: repoCommunicator;
     license: number = 0;
