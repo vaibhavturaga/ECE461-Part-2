@@ -12,7 +12,7 @@ const logger_1 = __importDefault(require("../logger"));
  * 1. takes in url string
  * 2. Parses string to see if it is npmjs
  * 3. If so we talk to the npm with query-register to get the github repository
- * 4. Request Github Repository. This can be separated into different functions to request for issues, contributors, etc.
+ * 4. Interface for requesting information from github repository. Is used by communicator class
  *
  * TODO:
  * 1. better error handling: can't access github repo, can't access npm package, etc.
@@ -76,13 +76,7 @@ class repoConnection {
         if (url.includes("npmjs")) {
             try {
                 const githubRepoUrl = await this.queryNPM(url);
-                if (githubRepoUrl) {
-                    //logger.info(`The GitHub repository for ${url} is: ${githubRepoUrl}`);
-                    return githubRepoUrl;
-                }
-                else {
-                    return null;
-                }
+                return githubRepoUrl;
             }
             catch (error) {
                 if (error instanceof Error) {
@@ -102,11 +96,17 @@ class repoConnection {
     async queryNPM(url) {
         const urlParts = url.split('/');
         const packageName = urlParts[urlParts.length - 1].split('.')[0];
-        const packageInfo = await (0, query_registry_1.getPackageManifest)({ name: packageName });
-        if (packageInfo.gitRepository && packageInfo.gitRepository.url) {
-            return packageInfo.gitRepository.url;
+        try {
+            const packageInfo = await (0, query_registry_1.getPackageManifest)({ name: packageName });
+            if (packageInfo.gitRepository && packageInfo.gitRepository.url) {
+                return packageInfo.gitRepository.url;
+            }
+            return null;
         }
-        return null;
+        catch (_a) {
+            logger_1.default.error(`Failed to get information about npm repository: ${this.url}`);
+            return null;
+        }
     }
     // ex goal: https://api.github.com/repos/browserify/browserify
     // ex endpoint: '/commits', '', '/issues?state=closed', '/issues?state=open'
@@ -134,6 +134,9 @@ class repoConnection {
                 }
                 else if (response.status === 403) {
                     // Implement exponential backoff for 403 responses.
+                    if (!retries) {
+                        logger_1.default.error(`Rate limit exceeded on ${this.url} applying exponential backoff`);
+                    }
                     retries++;
                     const maxRetryDelay = 60000; // Maximum delay between retries (in milliseconds).
                     const retryDelay = Math.min(Math.pow(2, retries) * 1000, maxRetryDelay); // Exponential backoff formula.
@@ -171,8 +174,6 @@ class repoCommunicator {
         this.initializationPromise = null;
         this.contributors = null;
         this.commits = null;
-        this.OpenIssues = null;
-        this.closedIssues = null;
         this.general = null;
         this.connection = connection;
         if (!this.connection.error_occurred) {
@@ -181,7 +182,6 @@ class repoCommunicator {
     }
     async retrieveAllInfo() {
         const asyncFunctions = [
-            this.getissues.bind(this),
             this.getcontributors.bind(this),
             this.getCommits.bind(this),
             this.getGeneral.bind(this),
@@ -201,21 +201,6 @@ class repoCommunicator {
             return Promise.resolve();
         }
         return this.initializationPromise;
-    }
-    async getissues() {
-        try {
-            const openIssuesResponse = await this.connection.queryGithubapi('/issues?state=open');
-            const closedIssuesResponse = await this.connection.queryGithubapi('/issues?state=closed');
-            if (openIssuesResponse) {
-                this.OpenIssues = openIssuesResponse.data.length;
-            }
-            if (closedIssuesResponse) {
-                this.closedIssues = closedIssuesResponse.data.length;
-            }
-        }
-        catch (error) {
-            logger_1.default.error(`${error}`);
-        }
     }
     async getGeneral() {
         try {

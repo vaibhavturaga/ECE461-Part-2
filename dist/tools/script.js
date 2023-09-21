@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.beginEvaluation = void 0;
 const api_1 = require("./api");
 const api_2 = require("./api");
-const api_3 = require("./api");
+const metriceval_1 = require("./metriceval");
 const logger_1 = __importDefault(require("../logger"));
 async function beginEvaluation(urls, token) {
     //dotenv.config({ path: '.env' });
@@ -27,7 +27,7 @@ async function beginEvaluation(urls, token) {
     // we can create a metric instance by feeding the information from the communicator to our evaluater which filters responses
     // and outputs scores.
     connectionsAndCommunicators.forEach((pair) => {
-        let metric = new api_3.metricEvaluation(pair.communicator);
+        let metric = new metriceval_1.metricEvaluation(pair.communicator);
         metric.logAll();
     });
 }

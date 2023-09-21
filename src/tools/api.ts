@@ -1,5 +1,5 @@
 import axios, {AxiosResponse} from 'axios';
-import { getPackageManifest } from 'query-registry';
+import { PackageManifest, getPackageManifest } from 'query-registry';
 import logger from '../logger';
 
 /****************************************************************************************************************************************
@@ -7,7 +7,7 @@ import logger from '../logger';
  * 1. takes in url string
  * 2. Parses string to see if it is npmjs
  * 3. If so we talk to the npm with query-register to get the github repository
- * 4. Request Github Repository. This can be separated into different functions to request for issues, contributors, etc.
+ * 4. Interface for requesting information from github repository. Is used by communicator class
  * 
  * TODO:
  * 1. better error handling: can't access github repo, can't access npm package, etc.
@@ -49,7 +49,7 @@ export class repoConnection{
 
   async initialize(url: string): Promise<void> {
     try {
-      const processedUrl = await this.processUrl(url);
+      const processedUrl: string | null = await this.processUrl(url);
       if (processedUrl) {
         const urlParts: string[] = processedUrl.split('/');
         this.org = urlParts[urlParts.length - 2];
@@ -76,13 +76,8 @@ export class repoConnection{
   async processUrl(url: string): Promise<string | null> {
     if (url.includes("npmjs")) {
       try {
-        const githubRepoUrl = await this.queryNPM(url);
-        if (githubRepoUrl) {
-          //logger.info(`The GitHub repository for ${url} is: ${githubRepoUrl}`);
-          return githubRepoUrl;
-        } else {
-          return null;
-        }
+        const githubRepoUrl: string | null = await this.queryNPM(url);
+        return githubRepoUrl
       } catch (error) {
         if (error instanceof Error) {
           logger.error(`${error}`); // Rethrow the error to propagate it to the caller
@@ -98,15 +93,21 @@ export class repoConnection{
     }
   }
 
-  async queryNPM(url: string): Promise<any>{
+  async queryNPM(url: string): Promise<string | null>{
     const urlParts: string[] = url.split('/');
     const packageName: string = urlParts[urlParts.length - 1].split('.')[0];
-    const packageInfo = await getPackageManifest({ name: packageName });
+    try{
+      const packageInfo: PackageManifest = await getPackageManifest({ name: packageName });
 
-    if (packageInfo.gitRepository && packageInfo.gitRepository.url) {
-      return packageInfo.gitRepository.url;
+      if (packageInfo.gitRepository && packageInfo.gitRepository.url) {
+        return packageInfo.gitRepository.url;
+      }
+      return null;
     }
-    return null;
+    catch{
+      logger.error(`Failed to get information about npm repository: ${this.url}`)
+      return null;
+    }
   }
 
   // ex goal: https://api.github.com/repos/browserify/browserify
@@ -179,8 +180,6 @@ export class repoCommunicator {
   private initializationPromise: Promise<void> | null = null;
   contributors: any[] | null = null;
   commits: any[] | null = null;
-  OpenIssues: number | null = null;
-  closedIssues: number | null = null;
   general: any[] | null = null;
   constructor(connection: repoConnection){
     this.connection = connection;
@@ -191,7 +190,6 @@ export class repoCommunicator {
 
   async retrieveAllInfo(): Promise<void>{
     const asyncFunctions: (() => Promise<void>)[] = [
-      this.getissues.bind(this),
       this.getcontributors.bind(this),
       this.getCommits.bind(this),
       this.getGeneral.bind(this),
@@ -211,18 +209,6 @@ export class repoCommunicator {
       return Promise.resolve();
     }
     return this.initializationPromise;
-  }
-
-  async getissues(): Promise<void>{
-    try{
-      const openIssuesResponse = await this.connection.queryGithubapi('/issues?state=open');
-      const closedIssuesResponse = await this.connection.queryGithubapi('/issues?state=closed');
-      if(openIssuesResponse){this.OpenIssues = openIssuesResponse.data.length;}
-      if(closedIssuesResponse){this.closedIssues = closedIssuesResponse.data.length;}
-    }
-    catch(error) {
-      logger.error(`${error}`);
-    }
   }
 
   async getGeneral(): Promise<void>{
