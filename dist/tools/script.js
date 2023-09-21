@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.beginEvaluation = void 0;
 const api_1 = require("./api");
 const api_2 = require("./api");
-const api_3 = require("./api");
+const metriceval_1 = require("./metriceval");
 const logger_1 = __importDefault(require("../logger"));
 async function beginEvaluation(urls, token) {
     //dotenv.config({ path: '.env' });
@@ -27,13 +27,8 @@ async function beginEvaluation(urls, token) {
     // we can create a metric instance by feeding the information from the communicator to our evaluater which filters responses
     // and outputs scores.
     connectionsAndCommunicators.forEach((pair) => {
-        logger_1.default.info(pair.connection.urlFromFile);
-        let metric = new api_3.metricEvaluation(pair.communicator);
-        //console.log(metric.busFactor)
-        //console.log(metric.communicator.contributors)
+        let metric = new metriceval_1.metricEvaluation(pair.communicator);
         metric.logAll();
     });
 }
 exports.beginEvaluation = beginEvaluation;
-//const urls: string[] = ['https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash'];
-//beginEvaluation(urls, );

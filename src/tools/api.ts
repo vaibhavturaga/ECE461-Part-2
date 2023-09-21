@@ -1,5 +1,5 @@
 import axios, {AxiosResponse} from 'axios';
-import { getPackageManifest } from 'query-registry';
+import { PackageManifest, getPackageManifest } from 'query-registry';
 import logger from '../logger';
 
 /****************************************************************************************************************************************
@@ -7,7 +7,7 @@ import logger from '../logger';
  * 1. takes in url string
  * 2. Parses string to see if it is npmjs
  * 3. If so we talk to the npm with query-register to get the github repository
- * 4. Request Github Repository. This can be separated into different functions to request for issues, contributors, etc.
+ * 4. Interface for requesting information from github repository. Is used by communicator class
  * 
  * TODO:
  * 1. better error handling: can't access github repo, can't access npm package, etc.
@@ -17,6 +17,7 @@ import logger from '../logger';
  * 
  * Completed:
  * 1. imported logger and swapped any console writes with logger calls
+ * 2. Handling status 202 (successful request repsonse not ready) and 403 (timeout we do exponential decay)
  **************************************************************************************************************************************/
   /* e.g. how to initialize connection
         (async () => {
@@ -49,19 +50,18 @@ export class repoConnection{
 
   async initialize(url: string): Promise<void> {
     try {
-      const processedUrl = await this.processUrl(url);
+      const processedUrl: string | null = await this.processUrl(url);
       if (processedUrl) {
         const urlParts: string[] = processedUrl.split('/');
         this.org = urlParts[urlParts.length - 2];
         this.repo = urlParts[urlParts.length - 1].split('.')[0];
         this.url = processedUrl;
       } else {
-        logger.error('Initialization failed: Github URL not Found.');
+        logger.error(`Initialization failed: Github URL not Found. for ${this.url}`);
         this.error_occurred = true;
       }
     } catch (error) {
       logger.error(`${error}`); // Rethrow the error to propagate it to the caller
-      this.error_occurred = true;
     }
   }
 
@@ -76,13 +76,8 @@ export class repoConnection{
   async processUrl(url: string): Promise<string | null> {
     if (url.includes("npmjs")) {
       try {
-        const githubRepoUrl = await this.queryNPM(url);
-        if (githubRepoUrl) {
-          //logger.info(`The GitHub repository for ${url} is: ${githubRepoUrl}`);
-          return githubRepoUrl;
-        } else {
-          return null;
-        }
+        const githubRepoUrl: string | null = await this.queryNPM(url);
+        return githubRepoUrl
       } catch (error) {
         if (error instanceof Error) {
           logger.error(`${error}`); // Rethrow the error to propagate it to the caller
@@ -98,39 +93,69 @@ export class repoConnection{
     }
   }
 
-  async queryNPM(url: string): Promise<string>{
+  async queryNPM(url: string): Promise<string | null>{
     const urlParts: string[] = url.split('/');
     const packageName: string = urlParts[urlParts.length - 1].split('.')[0];
-    const packageInfo = await getPackageManifest({ name: packageName });
+    try{
+      const packageInfo: PackageManifest = await getPackageManifest({ name: packageName });
 
-    if (packageInfo.gitRepository && packageInfo.gitRepository.url) {
-      return packageInfo.gitRepository.url;
+      if (packageInfo.gitRepository && packageInfo.gitRepository.url) {
+        return packageInfo.gitRepository.url;
+      }
+      return null;
     }
-    return ''; //empty string if no gitRepository
+    catch{
+      logger.error(`Failed to get information about npm repository: ${this.url}`)
+      return null;
+    }
   }
 
   // ex goal: https://api.github.com/repos/browserify/browserify
   // ex endpoint: '/commits', '', '/issues?state=closed', '/issues?state=open'
-  async queryGithubapi(queryendpoint: string): Promise<AxiosResponse<any[]> | null>{
-    try{
+async queryGithubapi(queryendpoint: string): Promise<AxiosResponse<any[]> | null> {
+    try {
       const axiosInstance = axios.create({
-          baseURL: 'https://api.github.com/',
-          headers:{
-              Authorization: `token ${this.githubkey}`,
-              Accept: 'application/json'
-          },
+        baseURL: 'https://api.github.com/',
+        headers: {
+          Authorization: `token ${this.githubkey}`,
+          Accept: 'application/json',
+          'X-GitHub-Api-Version': '2022-11-28', // Add the version header here
+        },
       });
       const endpoint: string = `repos/${this.org}/${this.repo}${queryendpoint}`;
-      const response: AxiosResponse<any[]> = await axiosInstance.get(endpoint);
+      
+      let response: AxiosResponse<any[]>;
+      let count = 10; // Maximum retry count for 202 responses
+      let retries = 0;
+      do {
+        response = await axiosInstance.get(endpoint);
+  
+        if (response.status === 202) {
+          // If the response is 202, it means the request is still processing.
+          // Wait for a while before retrying, and decrement the count.
+          count--;
+          await new Promise((resolve) => setTimeout(resolve, 1000)); // Adjust the polling interval as needed.
+        } else if (response.status === 403) {
+          // Implement exponential backoff for 403 responses.
+          if(!retries){
+            logger.error(`Rate limit exceeded on ${this.url} applying exponential backoff`)
+          }
+          retries++;
+          const maxRetryDelay = 60000; // Maximum delay between retries (in milliseconds).
+          const retryDelay = Math.min(Math.pow(2, retries) * 1000, maxRetryDelay); // Exponential backoff formula.
+          await new Promise((resolve) => setTimeout(resolve, retryDelay));
+        }
+      } while ((response.status === 202 && count > 0) || response.status === 403);
+  
       return response;
-    }
-    catch(error){
+    } catch (error) {
       logger.error(`${error}`);
       this.error_occurred = true;
-     // process.exit(1);
       return null;
     }
   }
+  
+  
 
   static async create(url: string, githubkey: string): Promise<repoConnection> {
     const instance = new repoConnection(url, githubkey);
@@ -142,21 +167,17 @@ export class repoConnection{
 /****************************************************************************************************************************************
  * repoCommunicator
  * 1. takes in a repoConnection
- * 2. Uses connection to query github api for issues, contributors, commits and general repository information. It runs all of these queries concurrently
+ * 2. Uses connection to query github api for contributors, commits and general repository information. It runs all of these queries concurrently
  * using promise.all this helps with efficiency
- * 3. We then store the responses to this class. I am thinking we have an evlauate function that parses and calculates metrics
+ * 3. We then store the responses to this class. 
+ * 4. We have an evaluate function in metriceval.ts that uses the response data
  * 
- * TODO:
- * 1. Error handling, can't access github repo through connection, too many requests, etc.
- * 2. 203 error, could also hand it in the github api function
  **************************************************************************************************************************************/
 export class repoCommunicator {
   connection: repoConnection;
   private initializationPromise: Promise<void> | null = null;
   contributors: any[] | null = null;
   commits: any[] | null = null;
-  OpenIssues: number | null = null;
-  closedIssues: number | null = null;
   general: any[] | null = null;
   constructor(connection: repoConnection){
     this.connection = connection;
@@ -167,7 +188,6 @@ export class repoCommunicator {
 
   async retrieveAllInfo(): Promise<void>{
     const asyncFunctions: (() => Promise<void>)[] = [
-      this.getissues.bind(this),
       this.getcontributors.bind(this),
       this.getCommits.bind(this),
       this.getGeneral.bind(this),
@@ -187,18 +207,6 @@ export class repoCommunicator {
       return Promise.resolve();
     }
     return this.initializationPromise;
-  }
-
-  async getissues(): Promise<void>{
-    try{
-      const openIssuesResponse = await this.connection.queryGithubapi('/issues?state=open');
-      const closedIssuesResponse = await this.connection.queryGithubapi('/issues?state=closed');
-      if(openIssuesResponse){this.OpenIssues = openIssuesResponse.data.length;}
-      if(closedIssuesResponse){this.closedIssues = closedIssuesResponse.data.length;}
-    }
-    catch(error) {
-      logger.error(`${error}`);
-    }
   }
 
   async getGeneral(): Promise<void>{
@@ -228,7 +236,7 @@ export class repoCommunicator {
       const response = await this.connection.queryGithubapi('/stats/contributors');
       if(response){
         this.contributors = response.data
-        //console.log(response.data)
+        //console.log(`${this.connection.url} ${response.status}`)
       }
     }
     catch(error) {
@@ -240,140 +248,5 @@ export class repoCommunicator {
     const instance = new repoCommunicator(connection);
     await instance.waitForInitialization();
     return instance;
-  }
-}
-
-/**
- * metricEvaluation
- * 1. takes in the communicator
- * 2. filters through responses that are stored in communicator to generate metric calculations
- * 
- * TODO:
- * 1. Error handling, can't find metric
- */
-export class metricEvaluation {
-  communicator: repoCommunicator;
-  license: number = 0;
-  threshold_response: number = 3;
-  threshold_bus: number = 5;
-  threshold_rampup: number = 8;
-  busFactor: number = 0;
-  responsivness: number = 0;
-  rampUp: number = 0;
-  correctness: number = 0;
-  score: number = 0;
-  constructor(communicator: repoCommunicator){
-    this.communicator = communicator;
-    this.getBus();
-    this.getRampUp();
-    this.getCorrectness();
-    this.getResponsiveness()
-    this.getlicense();
-    this.netScore();
-  }
-
-  getCorrectness(){
-    if(!this.communicator.general){
-      logger.error(`API failed to return Correctness information for url: ${this.communicator.connection.url}`)
-      return;
-    }
-    if('open_issues_count' in this.communicator.general && 'watchers_count' in this.communicator.general){
-      const open_issues: any = this.communicator.general.open_issues_count;
-      const watchers_count: any = this.communicator.general.watchers_count;
-      this.correctness = Math.max(1 - Math.log(open_issues) / Math.log(watchers_count), 0)
-    }
-  }
-  getRampUp(){
-    if(!this.communicator.contributors || !Array.isArray(this.communicator.contributors)){
-      logger.error(`API failed to return Ramp Up (contributor) information for url: ${this.communicator.connection.url}`)
-      return;
-    }
-    //console.log(this.communicator.contributors)
-    const firstCommitWeeks = this.communicator.contributors.map(contributor => {
-      for (const week of contributor.weeks) {
-        if (week.c > 0) {
-          return week.w;
-        }
-      }
-      return null;
-    }).filter(Boolean);
-    if(firstCommitWeeks.length === 0){
-      return null;
-    }
-    const sortedWeeks = firstCommitWeeks.slice().sort((a, b) => a - b);
-    let differences = []
-    for (let i = 1; i < sortedWeeks.length; i++) {
-      const diff = sortedWeeks[i] - sortedWeeks[i - 1];
-      differences.push(diff);
-    }
-  
-    const average_seconds =  differences.reduce((acc, diff) => acc + diff, 0) / differences.length;
-    const average_weeks = average_seconds / 60 / 60 / 24 / 7
-    this.rampUp = average_weeks? Math.min(1, this.threshold_rampup/average_weeks): 0;
-    //logger.info(`Ramp Up: ${this.rampUp}`)
-  }
-  getBus(){
-    if(!this.communicator.contributors){
-      logger.error(`API failed to return Bus Factor (contributor) information for url: ${this.communicator.connection.url}`)
-      return;
-    }
-    if(Array.isArray(this.communicator.contributors)){
-      let commitList: number[] = [];
-      this.communicator.contributors.forEach(contributor => {
-        commitList.push(contributor.total)
-    });
-    //console.log(commitList)
-    const sortedCommits = commitList.sort((a, b) => b - a);
-    const sum = sortedCommits.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
-    let current_sum = 0
-    for(let i = 0; i < sortedCommits.length && current_sum < sum/2; i++){
-        current_sum += sortedCommits[i];
-        this.busFactor += 1
-    }
-    this.busFactor = Math.min(1, this.busFactor/this.threshold_bus)
-   // logger.info(`Bus Factor: ${this.busFactor}`)
-    }
-  }
-
-  getResponsiveness(){
-    if(!this.communicator.commits){
-      logger.error(`API failed to return responsiveness information for url: ${this.communicator.connection.url}`)
-      return;
-    }
-      const mostRecentCommit = this.communicator.commits[0];
-      const commitDate = new Date(mostRecentCommit.commit.author.date);
-      const today = new Date();
-      const diffInMonths = (today.getFullYear() - commitDate.getFullYear()) * 12 + (today.getMonth() - commitDate.getMonth());
-      this.responsivness = this.threshold_response / Math.max(this.threshold_response, diffInMonths)
-    //  logger.info(`Responsivene Maintainer: ${this.responsivness}`)
-    
-  }
-
-  getlicense(){
-    if(!this.communicator.general){
-      logger.error(`API failed to return clicense information for url: ${this.communicator.connection.url}`)
-      return;
-    }
-      if('license' in this.communicator.general){
-        if(this.communicator.general.license){
-          this.license = 1
-        }
-      }
-    //  logger.info(`License: ${this.license}`)
-    
-  }
-
-  netScore(){
-    this.score = 0.2 * this.busFactor + 0.3 * this.responsivness + 0.1 * this.license + 0.1 * this.rampUp + 0.3 * this.correctness;
-   // logger.info(`Net Score: ${this.score}`)
-    return this.score;
-  }
-  logAll(){
-    logger.info(`Bus Factor: ${this.busFactor}`)
-    logger.info(`Ramp Up: ${this.rampUp}`)
-    logger.info(`Correctness: ${this.correctness}`)
-    logger.info(`Responsivene Maintainer: ${this.responsivness}`)
-    logger.info(`License: ${this.license}`)
-    logger.info(`Net Score: ${this.score}`)
   }
 }

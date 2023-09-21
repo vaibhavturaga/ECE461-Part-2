@@ -29,7 +29,7 @@ const readURLs = async (fileName) => {
             urls.push(line);
         }
     })
-        .catch((error) => {
+        .catch(() => {
         console.error(`File not found at: ${fileName}`);
     });
     return urls;
@@ -41,4 +41,4 @@ export const testURLs = async () => {
     console.log(urls);
 }
 
-testURLs();*/ 
+testURLs();*/

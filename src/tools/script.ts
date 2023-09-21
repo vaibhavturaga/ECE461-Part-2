@@ -1,6 +1,6 @@
 import {repoConnection} from './api'
 import {repoCommunicator} from './api'
-import {metricEvaluation} from './api'
+import { metricEvaluation } from './metriceval'
 import * as dotenv from 'dotenv'
 import logger from '../logger';
 
@@ -26,14 +26,7 @@ export async function beginEvaluation(urls: string[], token: string) {
     // we can create a metric instance by feeding the information from the communicator to our evaluater which filters responses
     // and outputs scores.
     connectionsAndCommunicators.forEach((pair: any)=>{
-        logger.info(pair.connection.urlFromFile)
         let metric = new metricEvaluation(pair.communicator)
-        //console.log(metric.busFactor)
-        //console.log(metric.communicator.contributors)
         metric.logAll();
     })
   }
-  //dotenv.config({ path: '.env' });
-  //const token: string | undefined = process.env.GITHUB_API_KEY;
-  //const urls: string[] = ['https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash'];
-  //beginEvaluation(urls, );

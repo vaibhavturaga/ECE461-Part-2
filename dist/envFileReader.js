@@ -22,9 +22,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.readEnv = void 0;
 const fsPromise = __importStar(require("fs/promises"));
 const readEnv = async () => {
-    var token = "";
-    var logLevel = "";
-    var logFile = "";
+    let token = "";
+    let logLevel = "";
+    let logFile = "";
     await fsPromise.open("./.env", 'r')
         .then(async (response) => {
         for await (const line of response.readLines()) {
@@ -39,7 +39,7 @@ const readEnv = async () => {
             }
         }
     })
-        .catch((error) => {
+        .catch(() => {
         console.error(`.env file not found`);
     });
     return { token: token, logLevel: logLevel, logFile: logFile };

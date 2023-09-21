@@ -1,5 +1,4 @@
-import * as fsPromise from 'fs/promises'; 
-import test from 'node:test';
+import * as fsPromise from 'fs/promises';
 
 export const readURLs = async (fileName: string) => {
     const urls: string[] = [];
@@ -9,7 +8,7 @@ export const readURLs = async (fileName: string) => {
                 urls.push(line);
             }
         })
-        .catch((error) => {
+        .catch(() => {
             console.error(`File not found at: ${fileName}`)
         });
     return urls;
