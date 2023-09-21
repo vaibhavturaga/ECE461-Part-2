@@ -98,7 +98,7 @@ export class repoConnection{
     }
   }
 
-  async queryNPM(url: string): Promise<any>{
+  async queryNPM(url: string): Promise<string>{
     const urlParts: string[] = url.split('/');
     const packageName: string = urlParts[urlParts.length - 1].split('.')[0];
     const packageInfo = await getPackageManifest({ name: packageName });
@@ -106,7 +106,7 @@ export class repoConnection{
     if (packageInfo.gitRepository && packageInfo.gitRepository.url) {
       return packageInfo.gitRepository.url;
     }
-    return null;
+    return ''; //empty string if no gitRepository
   }
 
   // ex goal: https://api.github.com/repos/browserify/browserify
