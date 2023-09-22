@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -47,114 +56,126 @@ class repoConnection {
         this.org = '';
         this.initializationPromise = this.initialize(url);
     }
-    async initialize(url) {
-        try {
-            const processedUrl = await this.processUrl(url);
-            if (processedUrl) {
-                const urlParts = processedUrl.split('/');
-                this.org = urlParts[urlParts.length - 2];
-                this.repo = urlParts[urlParts.length - 1].split('.')[0];
-                this.url = processedUrl;
-            }
-            else {
-                logger_1.default.error(`Initialization failed: Github URL not Found. for ${this.url}`);
-                this.error_occurred = true;
-            }
-        }
-        catch (error) {
-            logger_1.default.error(`${error}`); // Rethrow the error to propagate it to the caller
-        }
-    }
-    //This can be called from other functions when first initializing the class to know when initilization is complete. example code for when intializing instance
-    async waitForInitialization() {
-        if (!this.initializationPromise) {
-            return Promise.resolve();
-        }
-        return this.initializationPromise;
-    }
-    async processUrl(url) {
-        if (url.includes("npmjs")) {
+    initialize(url) {
+        return __awaiter(this, void 0, void 0, function* () {
             try {
-                const githubRepoUrl = await this.queryNPM(url);
-                return githubRepoUrl;
-            }
-            catch (error) {
-                if (error instanceof Error) {
-                    logger_1.default.error(`${error}`); // Rethrow the error to propagate it to the caller
+                const processedUrl = yield this.processUrl(url);
+                if (processedUrl) {
+                    const urlParts = processedUrl.split('/');
+                    this.org = urlParts[urlParts.length - 2];
+                    this.repo = urlParts[urlParts.length - 1].split('.')[0];
+                    this.url = processedUrl;
                 }
                 else {
-                    logger_1.default.error(`An unknown error occurred: ${error}`);
+                    logger_1.default.error(`Initialization failed: Github URL not Found. for ${this.url}`);
+                    this.error_occurred = true;
                 }
-                this.error_occurred = true;
+            }
+            catch (error) {
+                logger_1.default.error(`${error}`); // Rethrow the error to propagate it to the caller
+            }
+        });
+    }
+    //This can be called from other functions when first initializing the class to know when initilization is complete. example code for when intializing instance
+    waitForInitialization() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this.initializationPromise) {
+                return Promise.resolve();
+            }
+            return this.initializationPromise;
+        });
+    }
+    processUrl(url) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (url.includes("npmjs")) {
+                try {
+                    const githubRepoUrl = yield this.queryNPM(url);
+                    return githubRepoUrl;
+                }
+                catch (error) {
+                    if (error instanceof Error) {
+                        logger_1.default.error(`${error}`); // Rethrow the error to propagate it to the caller
+                    }
+                    else {
+                        logger_1.default.error(`An unknown error occurred: ${error}`);
+                    }
+                    this.error_occurred = true;
+                    return null;
+                }
+            }
+            else {
+                return url;
+            }
+        });
+    }
+    queryNPM(url) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const urlParts = url.split('/');
+            const packageName = urlParts[urlParts.length - 1].split('.')[0];
+            try {
+                const packageInfo = yield (0, query_registry_1.getPackageManifest)({ name: packageName });
+                if (packageInfo.gitRepository && packageInfo.gitRepository.url) {
+                    return packageInfo.gitRepository.url;
+                }
                 return null;
             }
-        }
-        else {
-            return url;
-        }
-    }
-    async queryNPM(url) {
-        const urlParts = url.split('/');
-        const packageName = urlParts[urlParts.length - 1].split('.')[0];
-        try {
-            const packageInfo = await (0, query_registry_1.getPackageManifest)({ name: packageName });
-            if (packageInfo.gitRepository && packageInfo.gitRepository.url) {
-                return packageInfo.gitRepository.url;
+            catch (_a) {
+                logger_1.default.error(`Failed to get information about npm repository: ${this.url}`);
+                return null;
             }
-            return null;
-        }
-        catch (_a) {
-            logger_1.default.error(`Failed to get information about npm repository: ${this.url}`);
-            return null;
-        }
+        });
     }
     // ex goal: https://api.github.com/repos/browserify/browserify
     // ex endpoint: '/commits', '', '/issues?state=closed', '/issues?state=open'
-    async queryGithubapi(queryendpoint) {
-        try {
-            const axiosInstance = axios_1.default.create({
-                baseURL: 'https://api.github.com/',
-                headers: {
-                    Authorization: `token ${this.githubkey}`,
-                    Accept: 'application/json',
-                    'X-GitHub-Api-Version': '2022-11-28', // Add the version header here
-                },
-            });
-            const endpoint = `repos/${this.org}/${this.repo}${queryendpoint}`;
-            let response;
-            let count = 10; // Maximum retry count for 202 responses
-            let retries = 0;
-            do {
-                response = await axiosInstance.get(endpoint);
-                if (response.status === 202) {
-                    // If the response is 202, it means the request is still processing.
-                    // Wait for a while before retrying, and decrement the count.
-                    count--;
-                    await new Promise((resolve) => setTimeout(resolve, 1000)); // Adjust the polling interval as needed.
-                }
-                else if (response.status === 403) {
-                    // Implement exponential backoff for 403 responses.
-                    if (!retries) {
-                        logger_1.default.error(`Rate limit exceeded on ${this.url} applying exponential backoff`);
+    queryGithubapi(queryendpoint) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const axiosInstance = axios_1.default.create({
+                    baseURL: 'https://api.github.com/',
+                    headers: {
+                        Authorization: `token ${this.githubkey}`,
+                        Accept: 'application/json',
+                        'X-GitHub-Api-Version': '2022-11-28', // Add the version header here
+                    },
+                });
+                const endpoint = `repos/${this.org}/${this.repo}${queryendpoint}`;
+                let response;
+                let count = 10; // Maximum retry count for 202 responses
+                let retries = 0;
+                do {
+                    response = yield axiosInstance.get(endpoint);
+                    if (response.status === 202) {
+                        // If the response is 202, it means the request is still processing.
+                        // Wait for a while before retrying, and decrement the count.
+                        count--;
+                        yield new Promise((resolve) => setTimeout(resolve, 1000)); // Adjust the polling interval as needed.
                     }
-                    retries++;
-                    const maxRetryDelay = 60000; // Maximum delay between retries (in milliseconds).
-                    const retryDelay = Math.min(Math.pow(2, retries) * 1000, maxRetryDelay); // Exponential backoff formula.
-                    await new Promise((resolve) => setTimeout(resolve, retryDelay));
-                }
-            } while ((response.status === 202 && count > 0) || response.status === 403);
-            return response;
-        }
-        catch (error) {
-            logger_1.default.error(`${error}`);
-            this.error_occurred = true;
-            return null;
-        }
+                    else if (response.status === 403) {
+                        // Implement exponential backoff for 403 responses.
+                        if (!retries) {
+                            logger_1.default.error(`Rate limit exceeded on ${this.url} applying exponential backoff`);
+                        }
+                        retries++;
+                        const maxRetryDelay = 60000; // Maximum delay between retries (in milliseconds).
+                        const retryDelay = Math.min(Math.pow(2, retries) * 1000, maxRetryDelay); // Exponential backoff formula.
+                        yield new Promise((resolve) => setTimeout(resolve, retryDelay));
+                    }
+                } while ((response.status === 202 && count > 0) || response.status === 403);
+                return response;
+            }
+            catch (error) {
+                logger_1.default.error(`${error}`);
+                this.error_occurred = true;
+                return null;
+            }
+        });
     }
-    static async create(url, githubkey) {
-        const instance = new repoConnection(url, githubkey);
-        await instance.waitForInitialization();
-        return instance;
+    static create(url, githubkey) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const instance = new repoConnection(url, githubkey);
+            yield instance.waitForInitialization();
+            return instance;
+        });
     }
 }
 exports.repoConnection = repoConnection;
@@ -178,66 +199,78 @@ class repoCommunicator {
             this.initializationPromise = this.retrieveAllInfo();
         }
     }
-    async retrieveAllInfo() {
-        const asyncFunctions = [
-            this.getcontributors.bind(this),
-            this.getCommits.bind(this),
-            this.getGeneral.bind(this),
-            // Add more async functions as needed
-        ];
-        try {
-            await Promise.all(asyncFunctions.map(fn => fn()));
-        }
-        catch (error) {
-            // Handle errors
-            logger_1.default.error(`${error}`);
-            process.exit(1);
-        }
-    }
-    async waitForInitialization() {
-        if (!this.initializationPromise) {
-            return Promise.resolve();
-        }
-        return this.initializationPromise;
-    }
-    async getGeneral() {
-        try {
-            const response = await this.connection.queryGithubapi('');
-            if (response) {
-                this.general = response.data;
+    retrieveAllInfo() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const asyncFunctions = [
+                this.getcontributors.bind(this),
+                this.getCommits.bind(this),
+                this.getGeneral.bind(this),
+                // Add more async functions as needed
+            ];
+            try {
+                yield Promise.all(asyncFunctions.map(fn => fn()));
             }
-        }
-        catch (error) {
-            logger_1.default.error(`${error}`);
-        }
-    }
-    async getCommits() {
-        try {
-            const response = await this.connection.queryGithubapi('/commits');
-            if (response) {
-                this.commits = response.data;
+            catch (error) {
+                // Handle errors
+                logger_1.default.error(`${error}`);
+                process.exit(1);
             }
-        }
-        catch (error) {
-            logger_1.default.error(`${error}`);
-        }
+        });
     }
-    async getcontributors() {
-        try {
-            const response = await this.connection.queryGithubapi('/stats/contributors');
-            if (response) {
-                this.contributors = response.data;
-                //console.log(`${this.connection.url} ${response.status}`)
+    waitForInitialization() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this.initializationPromise) {
+                return Promise.resolve();
             }
-        }
-        catch (error) {
-            logger_1.default.error(`${error}`);
-        }
+            return this.initializationPromise;
+        });
     }
-    static async create(connection) {
-        const instance = new repoCommunicator(connection);
-        await instance.waitForInitialization();
-        return instance;
+    getGeneral() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const response = yield this.connection.queryGithubapi('');
+                if (response) {
+                    this.general = response.data;
+                }
+            }
+            catch (error) {
+                logger_1.default.error(`${error}`);
+            }
+        });
+    }
+    getCommits() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const response = yield this.connection.queryGithubapi('/commits');
+                if (response) {
+                    this.commits = response.data;
+                }
+            }
+            catch (error) {
+                logger_1.default.error(`${error}`);
+            }
+        });
+    }
+    getcontributors() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const response = yield this.connection.queryGithubapi('/stats/contributors');
+                if (response) {
+                    this.contributors = response.data;
+                    //console.log(`${this.connection.url} ${response.status}`)
+                }
+            }
+            catch (error) {
+                logger_1.default.error(`${error}`);
+            }
+        });
+    }
+    static create(connection) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const instance = new repoCommunicator(connection);
+            yield instance.waitForInitialization();
+            return instance;
+        });
     }
 }
 exports.repoCommunicator = repoCommunicator;
