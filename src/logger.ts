@@ -12,10 +12,10 @@ enum LogLevel {
  */
 class Logger {
   private loggerMain: winston.Logger;
+  private loggerDebug: winston.Logger;
   private loggerError: winston.Logger;
   private logLevel: LogLevel;
-  private combinedLogFileName: string | undefined;
-  private errorLogFileName: string | undefined;
+  private logFileName: string | undefined;
 
   /**
    * Create a new Logger instance.
@@ -23,11 +23,10 @@ class Logger {
    */
   constructor() {
     this.logLevel = this.getLogLevelFromEnv();
-    this.combinedLogFileName = process.env.COMBINED_LOG;
-    this.errorLogFileName = process.env.ERROR_LOG;
+    this.logFileName = process.env.LOG_FILE;
 
-    // Check if COMBINED_LOG and ERROR_LOG are defined; exit with code 0 if not
-    if (!this.combinedLogFileName || !this.errorLogFileName) {
+    // Check if LOG_FILE and ERROR_LOG are defined; exit with code 0 if not
+    if (!this.logFileName) {
       process.exit(0);
     }
 
@@ -38,7 +37,16 @@ class Logger {
       format: customFormat,
       transports: [
         new winston.transports.Console({ level: 'info' }),
-        new winston.transports.File({ filename: this.combinedLogFileName }),
+        new winston.transports.File({ filename: this.logFileName }),
+      ],
+    });
+
+    this.loggerDebug = winston.createLogger({
+      level: 'debug',
+      format: customFormat,
+      transports: [
+        new winston.transports.Console({ level: 'debug' }),
+        new winston.transports.File({ filename: this.logFileName }),
       ],
     });
 
@@ -46,8 +54,7 @@ class Logger {
       level: 'error',
       format: customFormat,
       transports: [
-        new winston.transports.File({ filename: this.errorLogFileName }),
-        new winston.transports.File({ filename: this.combinedLogFileName }),
+        new winston.transports.File({ filename: this.logFileName }),
       ],
     });
   }
@@ -76,7 +83,7 @@ class Logger {
    */
   debug(message: string): void {
     if (this.logLevel >= LogLevel.Debug) {
-      this.loggerMain.debug(message);
+      this.loggerDebug.debug(message);
     }
   }
 
