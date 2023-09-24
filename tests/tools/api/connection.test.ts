@@ -60,7 +60,7 @@ describe('repoConnection', () => {
 
     // testing for bad url
     test('create bad url', async () => {
-        const badUrl = 'https://www.npmjs.com/package/express';
+        const badUrl = 'https://www.npmjs.com/bad_url/this_is_a_bad_url';
         const connection = await repoConnection.create(badUrl, token);
         expect(connection.error_occurred).toBe(true); // should be true for this test
     });
