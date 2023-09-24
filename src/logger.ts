@@ -1,5 +1,5 @@
 import * as winston from 'winston';
-require('dotenv').config();
+import 'dotenv/config';
 
 enum LogLevel {
   Silent = 0,
@@ -36,7 +36,6 @@ class Logger {
       level: this.logLevel >= LogLevel.Info ? 'info' : 'silent',
       format: customFormat,
       transports: [
-        new winston.transports.Console({ level: 'info' }),
         new winston.transports.File({ filename: this.logFileName }),
       ],
     });
@@ -45,7 +44,6 @@ class Logger {
       level: 'debug',
       format: customFormat,
       transports: [
-        new winston.transports.Console({ level: 'debug' }),
         new winston.transports.File({ filename: this.logFileName }),
       ],
     });
@@ -83,6 +81,7 @@ class Logger {
    */
   debug(message: string): void {
     if (this.logLevel >= LogLevel.Debug) {
+      console.log(message);
       this.loggerDebug.debug(message);
     }
   }
@@ -93,6 +92,7 @@ class Logger {
    */
   info(message: string): void {
     if (this.logLevel >= LogLevel.Info) {
+      console.log(message);
       this.loggerMain.info(message);
     }
   }
@@ -103,6 +103,7 @@ class Logger {
    */
   warn(message: string): void {
     if (this.logLevel >= LogLevel.Info) {
+      console.log(message);
       this.loggerMain.warn(message);
     }
   }
