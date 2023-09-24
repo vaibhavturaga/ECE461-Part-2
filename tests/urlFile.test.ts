@@ -1,5 +1,4 @@
 import { readURLs } from '../src/urlFileReader';
-import logger from '../src/logger';
 import * as fs from 'fs';
 import * as path from 'path';
 import { describe, test, expect } from '@jest/globals';
@@ -34,7 +33,7 @@ describe('URL_FILE', () => {
         expect(JSON.stringify(urls)).toBe(JSON.stringify(testArray));
     });
 
-    test('logs error messages correctly', async () => {
+    test('logs no URL_FILE error messages correctly', async () => {
         // Log an error message
         await readURLs('doesNotExist.txt');
 
