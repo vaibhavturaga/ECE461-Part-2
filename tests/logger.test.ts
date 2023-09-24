@@ -2,7 +2,7 @@ import logger from '../src/logger';
 import * as fs from 'fs';
 import * as path from 'path';
 import { describe, test, expect, beforeAll } from '@jest/globals';
-require('dotenv').config();
+import 'dotenv/config';
 
 describe('Logger', () => {
     beforeAll(() => {
