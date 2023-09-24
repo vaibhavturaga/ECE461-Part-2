@@ -80,8 +80,8 @@ class Logger {
    * @param {string} message - The debug message to log.
    */
   debug(message: string): void {
-    if (this.logLevel >= LogLevel.Debug) {
       console.log(message);
+    if (this.logLevel >= LogLevel.Debug) {
       this.loggerDebug.debug(message);
     }
   }
@@ -91,8 +91,8 @@ class Logger {
    * @param {string} message - The information message to log.
    */
   info(message: string): void {
-    if (this.logLevel >= LogLevel.Info) {
       console.log(message);
+    if (this.logLevel >= LogLevel.Info) {
       this.loggerMain.info(message);
     }
   }
@@ -102,8 +102,8 @@ class Logger {
    * @param {string} message - The warning message to log.
    */
   warn(message: string): void {
-    if (this.logLevel >= LogLevel.Info) {
       console.log(message);
+    if (this.logLevel >= LogLevel.Info) {
       this.loggerMain.warn(message);
     }
   }
