@@ -20,7 +20,7 @@ class Logger {
       format: customFormat,
       transports: [
         new winston.transports.Console({ level: 'info' }),
-        new winston.transports.File({ filename: '../logs/combined.log' }),
+        new winston.transports.File({ filename: 'logs/combined.log' }),
       ],
     });
 
@@ -29,8 +29,8 @@ class Logger {
       level: 'error',
       format: customFormat,
       transports: [
-        new winston.transports.File({ filename: '../logs/error.log' }),
-        new winston.transports.File({ filename: '../logs/combined.log' }),
+        new winston.transports.File({ filename: 'logs/error.log' }),
+        new winston.transports.File({ filename: 'logs/combined.log' }),
       ],
     });
   }
