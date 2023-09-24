@@ -32,7 +32,6 @@ import logger from '../logger';
   */
 export class repoConnection{
   url: string | null;
-  urlFromFile: string | null = null; 
   githubkey: string | null;
   repo: string;
   org: string;
@@ -40,9 +39,8 @@ export class repoConnection{
   private initializationPromise: Promise<void> | null = null;
   
   constructor(url: string, githubkey: string) {
-    this.urlFromFile = url;
     this.githubkey = githubkey;
-    this.url = null;
+    this.url = url;
     this.repo = '';
     this.org = '';
     this.initializationPromise = this.initialize(url);
@@ -62,6 +60,7 @@ export class repoConnection{
       }
     } catch (error) {
       logger.error(`${error}`); // Rethrow the error to propagate it to the caller
+      this.error_occurred = true;
     }
   }
 
@@ -106,6 +105,7 @@ export class repoConnection{
     }
     catch{
       logger.error(`Failed to get information about npm repository: ${this.url}`)
+      this.error_occurred = true;
       return null;
     }
   }

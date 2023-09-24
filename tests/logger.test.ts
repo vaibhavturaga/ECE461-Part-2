@@ -2,33 +2,25 @@ import logger from '../src/logger';
 import * as fs from 'fs';
 import * as path from 'path';
 import { describe, test, expect, beforeAll } from '@jest/globals';
+import 'dotenv/config';
 
 describe('Logger', () => {
-    // Function to check if a log file exists, if not, create it
-    const ensureLogFileExists = (logFilePath: string) => {
-        if (!fs.existsSync(logFilePath)) {
-            fs.writeFileSync(logFilePath, '');
-        }
-    };
-
     beforeAll(() => {
-        // Ensure the logs directory exists before running the tests
-        const logsDirectory = path.join(__dirname, '../logs');
-        if (!fs.existsSync(logsDirectory)) {
-            fs.mkdirSync(logsDirectory);
+        // Ensure that the LOG_FILE environment variable is set
+        if (!process.env.LOG_FILE) {
+            throw new Error('LOG_FILE environment variable is not defined.');
         }
-
-        // Check and create log files if necessary
-        ensureLogFileExists(path.join(__dirname, '../logs/error.log'));
-        ensureLogFileExists(path.join(__dirname, '../logs/combined.log'));
     });
 
     test('logs info messages correctly', async () => {
+        // Set the log level to INFO
+        process.env.LOG_LEVEL = '1';
+
         // Log an info message
         logger.info('This is an info message');
 
-        // Construct the path to the combined.log file
-        const logFilePath = path.join(__dirname, '../logs/combined.log');
+        // Construct the path to the combined.log file using the environment variable
+        const logFilePath = path.join(__dirname, ('../' + process.env.LOG_FILE) || '');
 
         // Wait for a short time to allow Winston to create and write to the log file
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -41,11 +33,14 @@ describe('Logger', () => {
     });
 
     test('logs warn messages correctly', async () => {
+        // Set the log level to INFO
+        process.env.LOG_LEVEL = '1';
+
         // Log a warn message
         logger.warn('This is a warning message');
 
-        // Construct the path to the combined.log file
-        const logFilePath = path.join(__dirname, '../logs/combined.log');
+        // Construct the path to the combined.log file using the environment variable
+        const logFilePath = path.join(__dirname, ('../' + process.env.LOG_FILE) || '');
 
         // Wait for a short time to allow Winston to create and write to the log file
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -58,22 +53,42 @@ describe('Logger', () => {
     });
 
     test('logs error messages correctly', async () => {
+        // Set the log level to INFO
+        process.env.LOG_LEVEL = '1';
+
         // Log an error message
         logger.error('This is an error message');
 
-        // Construct the path to the error.log file
-        const errorLogFilePath = path.join(__dirname, '../logs/error.log');
+        // Construct the path to the combined.log file using the environment variable
+        const combinedLogFilePath = path.join(__dirname, ('../' + process.env.LOG_FILE) || '');
 
         // Wait for a short time to allow Winston to create and write to the log file
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        // Read the contents of the error.log file
-        const errorLogFileContents = fs.readFileSync(errorLogFilePath, 'utf8');
+        // Read the contents of the combined.log file
+        const combinedLogFileContents = fs.readFileSync(combinedLogFilePath, 'utf8');
 
-        // Expect that the error.log file contains the error message
-        expect(errorLogFileContents).toContain('This is an error message');
+        // Expect that the combined.log file contains the error message
+        expect(combinedLogFileContents).toContain('This is an error message');
     });
 
-    // Additional test cases can be added here as needed
+    test('logs debug messages correctly', async () => {
+        // Set the log level to DEBUG
+        process.env.LOG_LEVEL = '2';
 
+        // Log a debug message
+        logger.debug('This is a debug message');
+
+        // Construct the path to the combined.log file using the environment variable
+        const logFilePath = path.join(__dirname, ('../' + process.env.LOG_FILE) || '');
+
+        // Wait for a short time to allow Winston to create and write to the log file
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        // Read the contents of the log file
+        const logFileContents = fs.readFileSync(logFilePath, 'utf8');
+
+        // Expect that the log file contains the debug message
+        expect(logFileContents).toContain('This is a debug message');
+    });
 });

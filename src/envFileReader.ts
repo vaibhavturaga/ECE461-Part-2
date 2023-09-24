@@ -1,10 +1,17 @@
+import logger from '../src/logger';
 import * as fsPromise from 'fs/promises'; 
+import * as path from 'path';
 
 export const readEnv = async () => {
-    let token = "";
-    let logLevel = "";
-    let logFile = "";
-    
+    let token: string | undefined = "";
+    let logLevel: string | undefined = "";
+    let logFile: string | undefined = "";
+    const dotenv = require('dotenv');
+    dotenv.config({ path: '.env' });
+    token = process.env.GITHUB_TOKEN;
+    logLevel = process.env.LOG_LEVEL;
+    logFile = process.env.LOG_FILE;
+    /*
     await fsPromise.open("./.env", 'r')
         .then(async (response) => {
             for await (const line of response.readLines()){
@@ -21,13 +28,8 @@ export const readEnv = async () => {
         })
         .catch(() => {
             console.error(`.env file not found`)
+            process.exit(1);
         });
-
+        */
     return {token:token, logLevel:logLevel, logFile:logFile};
 };
-
-/*export const testEnv = async () => {
-    var env = await readEnv();
-    console.log(env);
-}
-testEnv();*/

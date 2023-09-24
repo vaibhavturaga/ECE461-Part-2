@@ -1,38 +1,89 @@
 import * as winston from 'winston';
+import 'dotenv/config';
+
+enum LogLevel {
+  Silent = 0,
+  Info = 1,
+  Debug = 2,
+}
 
 /**
  * Logger class for handling application logs.
  */
 class Logger {
   private loggerMain: winston.Logger;
+  private loggerDebug: winston.Logger;
   private loggerError: winston.Logger;
+  private logLevel: LogLevel;
+  private logFileName: string | undefined;
 
   /**
    * Create a new Logger instance.
    * @constructor
    */
   constructor() {
+    this.logLevel = this.getLogLevelFromEnv();
+    this.logFileName = process.env.LOG_FILE;
+
+    // Check if LOG_FILE and ERROR_LOG are defined; exit with code 0 if not
+    if (!this.logFileName) {
+      process.exit(1);
+    }
+
     const customFormat = winston.format.printf(({ message }) => message);
 
-    // Logger for info and warn messages
     this.loggerMain = winston.createLogger({
-      level: 'info',
+      level: this.logLevel >= LogLevel.Info ? 'info' : 'silent',
       format: customFormat,
       transports: [
-        new winston.transports.Console({ level: 'info' }),
-        new winston.transports.File({ filename: 'logs/combined.log' }),
+        new winston.transports.File({ filename: this.logFileName }),
       ],
     });
 
-    // Logger for error messages
+    this.loggerDebug = winston.createLogger({
+      level: 'debug',
+      format: customFormat,
+      transports: [
+        new winston.transports.File({ filename: this.logFileName }),
+      ],
+    });
+
     this.loggerError = winston.createLogger({
       level: 'error',
       format: customFormat,
       transports: [
-        new winston.transports.File({ filename: 'logs/error.log' }),
-        new winston.transports.File({ filename: 'logs/combined.log' }),
+        new winston.transports.File({ filename: this.logFileName }),
       ],
     });
+  }
+
+  /**
+   * Get the log level from the environment variable LOG_LEVEL.
+   * @private
+   */
+  private getLogLevelFromEnv(): LogLevel {
+    const logLevel = process.env.LOG_LEVEL;
+
+    switch (logLevel) {
+      case '0':
+        return LogLevel.Silent;
+      case '2':
+        return LogLevel.Debug;
+      case '1':
+      default:
+        return LogLevel.Info;
+    }
+  }
+
+  /**
+   * Log a debug message.
+   * @param {string} message - The debug message to log.
+   */
+  debug(message: string): void {
+      console.log(message);
+    if (this.logLevel >= LogLevel.Debug) {
+      this.loggerDebug.debug(message);
+    }
   }
 
   /**
@@ -40,7 +91,10 @@ class Logger {
    * @param {string} message - The information message to log.
    */
   info(message: string): void {
-    this.loggerMain.info(message);
+      console.log(message);
+    if (this.logLevel >= LogLevel.Info) {
+      this.loggerMain.info(message);
+    }
   }
 
   /**
@@ -48,7 +102,10 @@ class Logger {
    * @param {string} message - The warning message to log.
    */
   warn(message: string): void {
-    this.loggerMain.warn(message);
+      console.log(message);
+    if (this.logLevel >= LogLevel.Info) {
+      this.loggerMain.warn(message);
+    }
   }
 
   /**

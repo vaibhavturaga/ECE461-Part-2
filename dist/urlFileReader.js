@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -18,9 +22,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readURLs = void 0;
 const fsPromise = __importStar(require("fs/promises"));
+const logger_1 = __importDefault(require("./logger"));
 const readURLs = async (fileName) => {
     const urls = [];
     await fsPromise.open(fileName, 'r')
@@ -30,7 +38,7 @@ const readURLs = async (fileName) => {
         }
     })
         .catch(() => {
-        console.error(`File not found at: ${fileName}`);
+        logger_1.default.error(`File not found at: ${fileName}`);
     });
     return urls;
 };

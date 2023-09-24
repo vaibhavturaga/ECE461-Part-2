@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -20,6 +24,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const winston = __importStar(require("winston"));
+const fs = __importStar(require("fs"));
 /**
  * Logger class for handling application logs.
  */
@@ -29,14 +34,20 @@ class Logger {
      * @constructor
      */
     constructor() {
+        const dotenv = require('dotenv');
+        dotenv.config({ path: '.env' });
         const customFormat = winston.format.printf(({ message }) => message);
+        const log_file = process.env.LOG_FILE;
+        if (!log_file || !fs.existsSync(log_file)) {
+            process.exit(1);
+        }
         // Logger for info and warn messages
         this.loggerMain = winston.createLogger({
             level: 'info',
             format: customFormat,
             transports: [
                 new winston.transports.Console({ level: 'info' }),
-                new winston.transports.File({ filename: 'logs/combined.log' }),
+                new winston.transports.File({ filename: log_file }),
             ],
         });
         // Logger for error messages
@@ -45,7 +56,7 @@ class Logger {
             format: customFormat,
             transports: [
                 new winston.transports.File({ filename: 'logs/error.log' }),
-                new winston.transports.File({ filename: 'logs/combined.log' }),
+                new winston.transports.File({ filename: log_file }),
             ],
         });
     }
