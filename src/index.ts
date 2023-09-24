@@ -2,7 +2,9 @@
 
 import { execSync } from 'child_process';
 import { Command } from 'commander';
-
+import { readURLs } from './urlFileReader';
+import { beginEvaluation } from './tools/script';
+import { readEnv } from './envFileReader';
 const program = new Command();
 
 program
@@ -28,11 +30,13 @@ program
     });
 
 program
-    .command('<URL_FILE>')
-    .description('Process a URL file')
-    .action((urlFile) => {
-        console.log(`Processing URL file: ${urlFile}`);
+    .argument('<URL_FILE>', 'Absolute file location to file containing URLs')
+    .action(async (urlFile: string) => {
+        //console.log(`Processing URL file: ${urlFile}`);
         // Your URL file processing logic here
+        const env_var: any = await readEnv();
+        const urlList: string[] = await readURLs(urlFile);
+        await beginEvaluation(urlList, env_var.token);
     });
 
 program
@@ -53,4 +57,5 @@ program
         }
     });
 
+//console.log('Parsing Arguments')
 program.parse(process.argv);

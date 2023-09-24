@@ -1,5 +1,5 @@
 import * as fsPromise from 'fs/promises';
-import logger from '../src/logger';
+import logger from './logger';
 
 export const readURLs = async (fileName: string) => {
     const urls: string[] = [];
