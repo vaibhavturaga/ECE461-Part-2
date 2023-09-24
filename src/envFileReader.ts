@@ -1,4 +1,6 @@
+import logger from '../src/logger';
 import * as fsPromise from 'fs/promises'; 
+import * as path from 'path';
 
 export const readEnv = async () => {
     let token: string | undefined = "";
@@ -31,9 +33,3 @@ export const readEnv = async () => {
         */
     return {token:token, logLevel:logLevel, logFile:logFile};
 };
-
-/*export const testEnv = async () => {
-    var env = await readEnv();
-    console.log(env);
-}
-testEnv();*/
