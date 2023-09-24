@@ -1,6 +1,6 @@
 // const { CoverageReporter } = require('@jest/reporters');
-import { Reporter, TestContext } from "@jest/reporters";
-import { AggregatedResult } from "@jest/test-result";
+// import { Reporter, TestContext } from "@jest/reporters";
+// import { AggregatedResult } from "@jest/test-result";
 
 
 logger = require('./logger');
@@ -52,8 +52,8 @@ class CustomReporter {//} extends CoverageReporter{
     console.log(`Total: ${totalTests}`);
     console.log(`Passed: ${passedTests}`);
 
-    await this._addUntestedFiles(testContexts);
-    const {map, reportContext} = await this._getCoverageResult();
+    // await this._addUntestedFiles(testContexts);
+    // const {map, reportContext} = await this._getCoverageResult();
   
     if (results.coverageMap) {
       const coverage = results.coverageMap.getCoverageSummary();
