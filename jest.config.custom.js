@@ -18,6 +18,7 @@ module.exports = {
     },
     verbose: true,
     collectCoverage: true,  
+    coverageDirectory: '<rootDir>/coverage/', 
     reporters: [  
         ['<rootDir>/dist/jestReporter.js', {}]
     ]
