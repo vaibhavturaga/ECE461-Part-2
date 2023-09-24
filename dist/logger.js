@@ -20,38 +20,56 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const winston = __importStar(require("winston"));
-/*
-
-This file defines the "logger" object from the class Logger.
-The "logger" object has methods .info(string), .warn(string), and .error(string)
-
-To use "logger" in your typescript file, import it like this: "import logger from './logger';"
-
-example uses: "logger.error('ERROR MESSAGE');"
-
-*/
-// TODO: 
-// have logs output file reset every time the program is run
+/**
+ * Logger class for handling application logs.
+ */
 class Logger {
+    /**
+     * Create a new Logger instance.
+     * @constructor
+     */
     constructor() {
-        this.logger = winston.createLogger({
+        const customFormat = winston.format.printf(({ message }) => message);
+        // Logger for info and warn messages
+        this.loggerMain = winston.createLogger({
             level: 'info',
-            format: winston.format.json(),
+            format: customFormat,
             transports: [
-                new winston.transports.Console(),
-                new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-                new winston.transports.File({ filename: 'logs/combined.log' }),
+                new winston.transports.Console({ level: 'info' }),
+                new winston.transports.File({ filename: '../logs/combined.log' }),
+            ],
+        });
+        // Logger for error messages
+        this.loggerError = winston.createLogger({
+            level: 'error',
+            format: customFormat,
+            transports: [
+                new winston.transports.File({ filename: '../logs/error.log' }),
+                new winston.transports.File({ filename: '../logs/combined.log' }),
             ],
         });
     }
+    /**
+     * Log an information message.
+     * @param {string} message - The information message to log.
+     */
     info(message) {
-        this.logger.info(message);
+        this.loggerMain.info(message);
     }
+    /**
+     * Log a warning message.
+     * @param {string} message - The warning message to log.
+     */
     warn(message) {
-        this.logger.warn(message);
+        this.loggerMain.warn(message);
     }
+    /**
+     * Log an error message.
+     * @param {string} message - The error message to log.
+     */
     error(message) {
-        this.logger.error(message);
+        this.loggerError.error(message);
     }
 }
+// Export a singleton instance of the Logger
 exports.default = new Logger();
