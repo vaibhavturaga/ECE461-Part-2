@@ -40,26 +40,28 @@ describe('repoConnection', () => {
             expect(connection.url).toBe(githubUrls[i]);
             expect(connection.repo).toBe(repos[i]);
             expect(connection.org).toBe(orgs[i]);
+            expect(connection.error_occurred).toBe(false);
         });
 
         // testing queryGithubapi
         test.each(['/commits', '', '/issues?state=closed', '/issues?state=open'])(`queryGithubAPI for current URL${i}`, async (query) => {
             const response = await connection.queryGithubapi(query);
             expect(response).not.toBeNull(); // should not be null for this test
+            expect(connection.error_occurred).toBe(false); // should be false for this test
         });
 
-        // TODO currently this test does not work due to running process.exit(1) after a failing query, need to discuss with Ben
         // testing bad queryGithubapi
-        // test.failing('queryGithubAPI for bad URL', async () => {
-        //     const response = await connection.queryGithubapi('/badquery');
-        // });
+        test('queryGithubAPI for bad URL', async () => {
+            const response = await connection.queryGithubapi('/badquery');
+            expect(response).toBeNull(); // should be null for this test
+            expect(connection.error_occurred).toBe(true); // should be true for this test
+        });
     });
 
-    // TODO unsure how to test this, need to discuss with Ben
     // testing for bad url
-    // test('create bad url', async () => {
-    //     const badUrl = 'https://www.npmjs.com/package/express';
-    //     const connection = await repoConnection.create(badUrl, token);
-    //     expect(connection).toBeNull();
-    // });
+    test('create bad url', async () => {
+        const badUrl = 'https://www.npmjs.com/package/express';
+        const connection = await repoConnection.create(badUrl, token);
+        expect(connection.error_occurred).toBe(true); // should be true for this test
+    });
 });
