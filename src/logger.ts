@@ -1,5 +1,5 @@
 import * as winston from 'winston';
-
+import * as fs from 'fs';
 /**
  * Logger class for handling application logs.
  */
@@ -12,15 +12,20 @@ class Logger {
    * @constructor
    */
   constructor() {
+    const dotenv = require('dotenv');
+    dotenv.config({ path: '.env' });
     const customFormat = winston.format.printf(({ message }) => message);
-
+    const log_file = process.env.LOG_FILE;
+    if (!log_file || !fs.existsSync(log_file)) {
+      process.exit(1);
+    }
     // Logger for info and warn messages
     this.loggerMain = winston.createLogger({
       level: 'info',
       format: customFormat,
       transports: [
         new winston.transports.Console({ level: 'info' }),
-        new winston.transports.File({ filename: 'logs/combined.log' }),
+        new winston.transports.File({ filename: log_file }),
       ],
     });
 
@@ -30,7 +35,7 @@ class Logger {
       format: customFormat,
       transports: [
         new winston.transports.File({ filename: 'logs/error.log' }),
-        new winston.transports.File({ filename: 'logs/combined.log' }),
+        new winston.transports.File({ filename: log_file }),
       ],
     });
   }

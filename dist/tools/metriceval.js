@@ -40,7 +40,7 @@ class metricEvaluation {
             const open_issues = this.communicator.general.open_issues_count;
             const watchers_count = this.communicator.general.watchers_count;
             this.correctness = Math.max(1 - Math.log(open_issues) / Math.log(watchers_count), 0);
-            this.correctness = parseFloat(this.correctness.toFixed(1));
+            this.correctness = parseFloat(this.correctness.toFixed(5));
         }
     }
     getRampUp() {
@@ -69,7 +69,7 @@ class metricEvaluation {
         const average_seconds = differences.reduce((acc, diff) => acc + diff, 0) / differences.length;
         const average_weeks = average_seconds / 60 / 60 / 24 / 7;
         this.rampUp = average_weeks ? Math.min(1, this.threshold_rampup / average_weeks) : 0;
-        this.rampUp = parseFloat(this.rampUp.toFixed(1));
+        this.rampUp = parseFloat(this.rampUp.toFixed(5));
         //logger.info(`Ramp Up: ${this.rampUp}`)
     }
     getBus() {
@@ -91,7 +91,7 @@ class metricEvaluation {
                 this.busFactor += 1;
             }
             this.busFactor = Math.min(1, this.busFactor / this.threshold_bus);
-            this.busFactor = parseFloat(this.busFactor.toFixed(1));
+            this.busFactor = parseFloat(this.busFactor.toFixed(5));
             // logger.info(`Bus Factor: ${this.busFactor}`)
         }
     }
@@ -105,7 +105,7 @@ class metricEvaluation {
         const today = new Date();
         const diffInMonths = (today.getFullYear() - commitDate.getFullYear()) * 12 + (today.getMonth() - commitDate.getMonth());
         this.responsivness = this.threshold_response / Math.max(this.threshold_response, diffInMonths);
-        this.responsivness = parseFloat(this.responsivness.toFixed(1));
+        this.responsivness = parseFloat(this.responsivness.toFixed(5));
         //  logger.info(`Responsivene Maintainer: ${this.responsivness}`)
     }
     getlicense() {
@@ -123,7 +123,7 @@ class metricEvaluation {
     netScore() {
         this.score = 0.2 * this.busFactor + 0.3 * this.responsivness + 0.1 * this.license + 0.1 * this.rampUp + 0.3 * this.correctness;
         // logger.info(`Net Score: ${this.score}`)
-        this.score = parseFloat(this.score.toFixed(1));
+        this.score = parseFloat(this.score.toFixed(5));
         return this.score;
     }
     logAll() {

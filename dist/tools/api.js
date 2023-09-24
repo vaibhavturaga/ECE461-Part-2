@@ -37,12 +37,10 @@ const logger_1 = __importDefault(require("../logger"));
 */
 class repoConnection {
     constructor(url, githubkey) {
-        this.urlFromFile = null;
         this.error_occurred = false;
         this.initializationPromise = null;
-        this.urlFromFile = url;
         this.githubkey = githubkey;
-        this.url = null;
+        this.url = url;
         this.repo = '';
         this.org = '';
         this.initializationPromise = this.initialize(url);
@@ -63,6 +61,7 @@ class repoConnection {
         }
         catch (error) {
             logger_1.default.error(`${error}`); // Rethrow the error to propagate it to the caller
+            this.error_occurred = true;
         }
     }
     //This can be called from other functions when first initializing the class to know when initilization is complete. example code for when intializing instance
@@ -105,6 +104,7 @@ class repoConnection {
         }
         catch (_a) {
             logger_1.default.error(`Failed to get information about npm repository: ${this.url}`);
+            this.error_occurred = true;
             return null;
         }
     }
