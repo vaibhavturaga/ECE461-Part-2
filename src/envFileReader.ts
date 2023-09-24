@@ -1,3 +1,4 @@
+import logger from '../src/logger';
 import * as fsPromise from 'fs/promises'; 
 import * as path from 'path';
 
@@ -21,7 +22,7 @@ export const readEnv = async () => {
             }
         })
         .catch(() => {
-            console.error(`.env file not found`)
+            logger.error(`.env file not found`)
         });
 
     return {token:token, logLevel:logLevel, logFile:logFile};
