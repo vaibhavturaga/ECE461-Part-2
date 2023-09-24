@@ -1,58 +1,108 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const winston = __importStar(require("winston"));
-/*
-
-This file defines the "logger" object from the class Logger.
-The "logger" object has methods .info(string), .warn(string), and .error(string)
-
-To use "logger" in your typescript file, import it like this: "import logger from './logger';"
-
-example uses: "logger.error('ERROR MESSAGE');"
-
-*/
-// TODO: 
-// have logs output file reset every time the program is run
-class Logger {
-    constructor() {
-        this.logger = winston.createLogger({
-            level: 'info',
-            format: winston.format.json(),
+exports.__esModule = true;
+var winston = require("winston");
+require("dotenv/config");
+var LogLevel;
+(function (LogLevel) {
+    LogLevel[LogLevel["Silent"] = 0] = "Silent";
+    LogLevel[LogLevel["Info"] = 1] = "Info";
+    LogLevel[LogLevel["Debug"] = 2] = "Debug";
+})(LogLevel || (LogLevel = {}));
+/**
+ * Logger class for handling application logs.
+ */
+var Logger = /** @class */ (function () {
+    /**
+     * Create a new Logger instance.
+     * @constructor
+     */
+    function Logger() {
+        this.logLevel = this.getLogLevelFromEnv();
+        this.logFileName = process.env.LOG_FILE;
+        // Check if LOG_FILE and ERROR_LOG are defined; exit with code 0 if not
+        if (!this.logFileName) {
+            process.exit(1);
+        }
+        var customFormat = winston.format.printf(function (_a) {
+            var message = _a.message;
+            return message;
+        });
+        this.loggerMain = winston.createLogger({
+            level: this.logLevel >= LogLevel.Info ? 'info' : 'silent',
+            format: customFormat,
             transports: [
-                new winston.transports.Console(),
-                new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-                new winston.transports.File({ filename: 'logs/combined.log', level: 'info' }),
-                new winston.transports.File({ filename: 'logs/combined.log', level: 'warn' }),
-            ],
+                new winston.transports.File({ filename: this.logFileName }),
+            ]
+        });
+        this.loggerDebug = winston.createLogger({
+            level: 'debug',
+            format: customFormat,
+            transports: [
+                new winston.transports.File({ filename: this.logFileName }),
+            ]
+        });
+        this.loggerError = winston.createLogger({
+            level: 'error',
+            format: customFormat,
+            transports: [
+                new winston.transports.File({ filename: this.logFileName }),
+            ]
         });
     }
-    info(message) {
-        this.logger.info(message);
-    }
-    warn(message) {
-        this.logger.warn(message);
-    }
-    error(message) {
-        this.logger.error(message);
-    }
-}
-exports.default = new Logger();
+    /**
+     * Get the log level from the environment variable LOG_LEVEL.
+     * @private
+     */
+    Logger.prototype.getLogLevelFromEnv = function () {
+        var logLevel = process.env.LOG_LEVEL;
+        switch (logLevel) {
+            case '0':
+                return LogLevel.Silent;
+            case '2':
+                return LogLevel.Debug;
+            case '1':
+            default:
+                return LogLevel.Info;
+        }
+    };
+    /**
+     * Log a debug message.
+     * @param {string} message - The debug message to log.
+     */
+    Logger.prototype.debug = function (message) {
+        if (this.logLevel >= LogLevel.Debug) {
+            console.log(message);
+            this.loggerDebug.debug(message);
+        }
+    };
+    /**
+     * Log an information message.
+     * @param {string} message - The information message to log.
+     */
+    Logger.prototype.info = function (message) {
+        if (this.logLevel >= LogLevel.Info) {
+            console.log(message);
+            this.loggerMain.info(message);
+        }
+    };
+    /**
+     * Log a warning message.
+     * @param {string} message - The warning message to log.
+     */
+    Logger.prototype.warn = function (message) {
+        if (this.logLevel >= LogLevel.Info) {
+            console.log(message);
+            this.loggerMain.warn(message);
+        }
+    };
+    /**
+     * Log an error message.
+     * @param {string} message - The error message to log.
+     */
+    Logger.prototype.error = function (message) {
+        this.loggerError.error(message);
+    };
+    return Logger;
+}());
+// Export a singleton instance of the Logger
+exports["default"] = new Logger();
