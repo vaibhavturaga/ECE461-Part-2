@@ -20,7 +20,7 @@ describe('metricEvaluation', () => {
     beforeAll(async () => {
         const Promise = require('bluebird');
 
-        const connectionsAndCommunicators = await Promise.map(urls, async (url: string) => {
+        const connectionsAndCommunicators = await Promise.all(urls, async (url: string) => {
           const connection = await repoConnection.create(url, token);
           const communicator = await repoCommunicator.create(connection);
           return { connection, communicator };
