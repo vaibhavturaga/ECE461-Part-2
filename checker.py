@@ -50,7 +50,7 @@ def run_install() -> int:
 # Each score should have up to 5 decimal places of precision, with no trailing zeroes
 # The command should exit 0 on success, and non-zero on failure
 def run_urlfile() -> int:
-    url_file = CLI_CMD_WRAPPER("./run /mnt/c/Users/bboar/OneDrive/Desktop/ECE461/ece461/one-url.txt")
+    url_file = CLI_CMD_WRAPPER("./run one-url.txt")
     url_file_rc, output = url_file.run()
     is_valid_output: bool
     total_correct = 0
