@@ -41,9 +41,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.readURLs = void 0;
 const fsPromise = __importStar(require("fs/promises"));
 const logger_1 = __importDefault(require("./logger"));
+const path = __importStar(require("path"));
 const readURLs = (fileName) => __awaiter(void 0, void 0, void 0, function* () {
     const urls = [];
-    yield fsPromise.open(fileName, 'r')
+    const urlFile = path.join(__dirname, ('../' + fileName));
+    yield fsPromise.open(urlFile, 'r')
         .then((response) => __awaiter(void 0, void 0, void 0, function* () {
         var e_1, _a;
         try {
@@ -61,7 +63,7 @@ const readURLs = (fileName) => __awaiter(void 0, void 0, void 0, function* () {
         }
     }))
         .catch(() => {
-        logger_1.default.error(`File not found at: ${fileName}`);
+        logger_1.default.error(`File not found at: ${urlFile}`);
     });
     return urls;
 });

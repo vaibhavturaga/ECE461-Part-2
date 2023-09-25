@@ -96,16 +96,27 @@ class metricEvaluation {
         }
     }
     getResponsiveness() {
-        if (!this.communicator.commits) {
+        //If static analysis worked
+        if (this.communicator.recentCommit) {
+            const commitDate = new Date(this.communicator.recentCommit);
+            const today = new Date();
+            const diffInMonths = (today.getFullYear() - commitDate.getFullYear()) * 12 + (today.getMonth() - commitDate.getMonth());
+            this.responsivness = this.threshold_response / Math.max(this.threshold_response, diffInMonths);
+            this.responsivness = parseFloat(this.responsivness.toFixed(5));
+        }
+        else if (!this.communicator.commits) {
             logger_1.default.error(`API failed to return responsiveness information for url: ${this.communicator.connection.url}`);
             return;
         }
-        const mostRecentCommit = this.communicator.commits[0];
-        const commitDate = new Date(mostRecentCommit.commit.author.date);
-        const today = new Date();
-        const diffInMonths = (today.getFullYear() - commitDate.getFullYear()) * 12 + (today.getMonth() - commitDate.getMonth());
-        this.responsivness = this.threshold_response / Math.max(this.threshold_response, diffInMonths);
-        this.responsivness = parseFloat(this.responsivness.toFixed(5));
+        //If static analysis did not work, use api
+        else {
+            const mostRecentCommit = this.communicator.commits[0];
+            const commitDate = new Date(mostRecentCommit.commit.author.date);
+            const today = new Date();
+            const diffInMonths = (today.getFullYear() - commitDate.getFullYear()) * 12 + (today.getMonth() - commitDate.getMonth());
+            this.responsivness = this.threshold_response / Math.max(this.threshold_response, diffInMonths);
+            this.responsivness = parseFloat(this.responsivness.toFixed(5));
+        }
         //  logger.info(`Responsivene Maintainer: ${this.responsivness}`)
     }
     getlicense() {
