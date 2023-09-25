@@ -1,4 +1,4 @@
-#!/bin/bash
+#! /bin/bash
 
 # Get the current directory
 current_dir="$(cd "$(dirname "$0")" && pwd)"
