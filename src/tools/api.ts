@@ -1,7 +1,9 @@
 import axios, {AxiosResponse} from 'axios';
 import { PackageManifest, getPackageManifest } from 'query-registry';
 import logger from '../logger';
-
+import { exec } from 'child_process';
+import { tmpdir } from 'os';
+import * as path from 'path';
 /****************************************************************************************************************************************
  * repoConnection
  * 1. takes in url string
@@ -179,6 +181,9 @@ export class repoCommunicator {
   contributors: any[] | null = null;
   commits: any[] | null = null;
   general: any[] | null = null;
+  repositoryURL: string = '';
+  cloneDirectory: string = '';
+  recentCommit: string = '';
   constructor(connection: repoConnection){
     this.connection = connection;
     if(!this.connection.error_occurred){
@@ -191,6 +196,7 @@ export class repoCommunicator {
       this.getcontributors.bind(this),
       this.getCommits.bind(this),
       this.getGeneral.bind(this),
+      this.getRecentCommitDate.bind(this),
       // Add more async functions as needed
     ];
     try {
@@ -208,7 +214,52 @@ export class repoCommunicator {
     }
     return this.initializationPromise;
   }
+  async getRecentCommitDate(): Promise<void> {
+    this.repositoryURL = `https://github.com/${this.connection.org}/${this.connection.repo}`
+    this.cloneDirectory = path.join(tmpdir(), this.connection.repo);
+    try {
+        // Clone the repository
+        await this.cloneRepository();
 
+        // Get the date of the first commit
+        await this.getMostRecentCommitDateFromRepository();
+
+        //console.log(`Recent commit date: ${this.recentCommit}`);
+    } catch (error) {
+        logger.error(`Error: ${error}`);
+    }
+}
+
+  private async cloneRepository(): Promise<void> {
+      return new Promise<void>((resolve, reject) => {
+          exec(`git clone ${this.repositoryURL} ${this.cloneDirectory}`, (error, stdout, stderr) => {
+              if (error) {
+                if (error.message.includes('already exists')) {
+                  resolve(); // Repository already exists, no need to clone again
+              } else {
+                  reject(error);
+              }
+              } else {
+                  resolve();
+              }
+          });
+      });
+  }
+
+  private async getMostRecentCommitDateFromRepository(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        exec(`git --git-dir=${this.cloneDirectory}/.git --work-tree=${this.cloneDirectory} log --format="%ct" -n 1`, (error, stdout, stderr) => {
+            if (error) {
+                reject(error);
+            } else {
+                const timestamp = parseInt(stdout.trim(), 10);
+                const mostRecentCommitDate = new Date(timestamp * 1000);
+                this.recentCommit = mostRecentCommitDate.toDateString()
+                resolve();
+            }
+        });
+    });
+}
   async getGeneral(): Promise<void>{
     try {
       const response = await this.connection.queryGithubapi('');
