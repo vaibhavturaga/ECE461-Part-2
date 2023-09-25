@@ -54,7 +54,7 @@ program
     console.log('Running tests...');
     // Your test logic here
     try {
-        (0, child_process_1.execSync)(`npx jest --coverage`, { stdio: 'inherit' });
+        (0, child_process_1.execSync)(`npm run test-custom`, { stdio: 'inherit' });
     }
     catch (error) {
         if (error instanceof Error) {
@@ -68,3 +68,4 @@ program
 });
 //console.log('Parsing Arguments')
 program.parse(process.argv);
+//# sourceMappingURL=index.js.map

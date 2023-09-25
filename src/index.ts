@@ -46,7 +46,7 @@ program
         console.log('Running tests...');
         // Your test logic here
         try {
-            execSync(`npx jest --coverage`, { stdio: 'inherit' });
+            execSync(`npm run test-custom`, { stdio: 'inherit' });
         } catch (error) {
             if (error instanceof Error) {
                 console.error(`Error running tests: ${error.message}`);

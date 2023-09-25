@@ -121,3 +121,4 @@ class Logger {
 }
 // Export a singleton instance of the Logger
 exports.default = new Logger();
+//# sourceMappingURL=logger.js.map

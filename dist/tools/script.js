@@ -43,3 +43,4 @@ function beginEvaluation(urls, token) {
     });
 }
 exports.beginEvaluation = beginEvaluation;
+//# sourceMappingURL=script.js.map
