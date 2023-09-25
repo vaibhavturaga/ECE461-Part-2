@@ -1,7 +1,7 @@
 import { readURLs } from '../src/urlFileReader';
 import * as fs from 'fs';
 import * as path from 'path';
-import { describe, test, expect } from '@jest/globals';
+import { describe, test, expect, beforeAll } from '@jest/globals';
 
 describe('URL_FILE', () => {
     // Function to check if a url file exists, if not, create it
