@@ -34,8 +34,8 @@ export class metricEvaluation {
         return;
       }
       if('open_issues_count' in this.communicator.general && 'watchers_count' in this.communicator.general){
-        const open_issues: any = this.communicator.general.open_issues_count;
-        const watchers_count: any = this.communicator.general.watchers_count;
+        const open_issues: any = this.communicator.general['open_issues_count'];
+        const watchers_count: any = this.communicator.general['watchers_count'];
         this.correctness = Math.max(1 - Math.log(open_issues) / Math.log(watchers_count), 0)
         this.correctness = parseFloat(this.correctness.toFixed(5));
       }
@@ -117,7 +117,7 @@ export class metricEvaluation {
         return;
       }
         if('license' in this.communicator.general){
-          if(this.communicator.general.license){
+          if(this.communicator.general['license']){
             this.license = 1
           }
         }

@@ -7,6 +7,5 @@ export const readEnv = async () => {
     token = process.env.GITHUB_TOKEN;
     logLevel = process.env.LOG_LEVEL;
     logFile = process.env.LOG_FILE;
-    
     return {token:token, logLevel:logLevel, logFile:logFile};
 };
