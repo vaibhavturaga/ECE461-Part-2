@@ -4,7 +4,7 @@ import * as path from 'path';
 
 export const readURLs = async (fileName: string) => {
     const urls: string[] = [];
-    let urlFile = path.join(__dirname, ('../' + fileName));
+    const urlFile = path.join(__dirname, ('../' + fileName));
     await fsPromise.open(urlFile, 'r')
         .then(async (response) => {
             for await (const line of response.readLines()){
