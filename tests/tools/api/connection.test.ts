@@ -36,7 +36,7 @@ describe('repoConnection', () => {
         test(`create ${i}`, () => {
             expect(connection).toBeDefined();
             expect(connection.githubkey).toBe(token);
-            expect(connection.url).toBe(urls[i]);
+            expect(connection.url).toBe(githubUrls[i]);
             expect(connection.repo).toBe(repos[i]);
             expect(connection.org).toBe(orgs[i]);
             expect(connection.error_occurred).toBe(false);
