@@ -20,7 +20,7 @@
     "typescript": "^5.2.2",
     "winston": "^3.10.0",
     "test": "npx jest --detectOpenHandles --config jest.config.js",
-    "test-custom": "npx jest --detectOpenHandles --coverage --config jest.config.custom.js"
+    "test-custom": "npx jest logger.test.ts --detectOpenHandles --coverage --config jest.config.custom.js"
   },
   "devDependencies": {
     "@types/jest": "^29.5.5",

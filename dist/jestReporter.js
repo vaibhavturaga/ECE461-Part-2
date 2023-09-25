@@ -1,15 +1,12 @@
-// const { CoverageReporter } = require('@jest/reporters');
-// import { Reporter, TestContext } from "@jest/reporters";
-// import { AggregatedResult } from "@jest/test-result";
+const { CoverageReporter } = require('@jest/reporters');
+// const {coverageMap} = require('istanbul-lib-coverage');
 
-
-logger = require('./logger');
-
-class CustomReporter {//} extends CoverageReporter{
-  constructor(globalConfig, options) {
-    // super()
+class CustomReporter extends CoverageReporter{
+  constructor(globalConfig, reporterOptions, reporterContext) {
+    super(globalConfig, reporterContext);
     this._globalConfig = globalConfig;
-    this._options = options;
+    this._options = reporterOptions;
+    this._context = reporterContext;
   }
 
   // async onRunComplete(testContexts, aggregatedResults) {
@@ -51,16 +48,15 @@ class CustomReporter {//} extends CoverageReporter{
   
     console.log(`Total: ${totalTests}`);
     console.log(`Passed: ${passedTests}`);
-
-    if (results.coverageMap) {
-      const coverage = results.coverageMap.getCoverageSummary();
+    if (results._coverageMap) {
+      const coverage = results._coverageMap.getCoverageSummary();
       const totalCoverage = (
         (coverage.lines.pct + coverage.branches.pct + coverage.functions.pct + coverage.statements.pct) / 4
       ).toFixed(2);
       console.log(`Coverage: ${totalCoverage}%`);
       console.log(`${passedTests}/${totalTests} test cases passed. ${totalCoverage}% line coverage achieved.`);
     } else {
-      console.log(`${passedTests}/${totalTests} test cases passed.`);
+      console.log(`${passedTests}/${totalTests} test cases passed. NULL`);
     }
   }  
 }
