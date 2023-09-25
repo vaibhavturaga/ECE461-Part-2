@@ -8,10 +8,8 @@ describe('env_reader', () => {
         let env = await readEnv();
 
         // Expect that the return array contains the urls
-        if(typeof(env.logLevel) == "string"){
-            expect(parseInt(env.logLevel)).toBeGreaterThanOrEqual(0);
-            expect(parseInt(env.logLevel)).toBeLessThanOrEqual(2);
-        }
+        expect(parseInt(env.logLevel)).toBeGreaterThanOrEqual(0);
+        expect(parseInt(env.logLevel)).toBeLessThanOrEqual(2);
         expect(env.token).toBeDefined();
         expect(env.logFile).toBeDefined();
     });
