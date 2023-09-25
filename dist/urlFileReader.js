@@ -18,7 +18,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-<<<<<<< HEAD
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -34,20 +33,15 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
     return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
     function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
     function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
-=======
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
->>>>>>> ben_api_communication
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readURLs = void 0;
 const fsPromise = __importStar(require("fs/promises"));
-<<<<<<< HEAD
-const readURLs = (fileName) => __awaiter(void 0, void 0, void 0, function* () {
-=======
 const logger_1 = __importDefault(require("./logger"));
-const readURLs = async (fileName) => {
->>>>>>> ben_api_communication
+const readURLs = (fileName) => __awaiter(void 0, void 0, void 0, function* () {
     const urls = [];
     yield fsPromise.open(fileName, 'r')
         .then((response) => __awaiter(void 0, void 0, void 0, function* () {
