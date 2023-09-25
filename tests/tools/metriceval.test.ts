@@ -1,7 +1,7 @@
 import {metricEvaluation} from '../../src/tools/metriceval';
 import {repoCommunicator} from '../../src/tools/api';
 import {repoConnection} from '../../src/tools/api';
-import {describe, test, expect} from '@jest/globals';
+import {describe, test, expect, beforeAll} from '@jest/globals';
 import * as dotenv from 'dotenv'
 
 process.env.DOTENV_CONFIG_PATH = '../../../.env';
@@ -13,11 +13,25 @@ if (!token) {
 }
 // globals
 const urls: string[] = ['https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash'];
-const connections: repoConnection[] = urls.map(url => new repoConnection(url, token));
-const communicators: repoCommunicator[] = connections.map(connection => new repoCommunicator(connection));
-const metrics: metricEvaluation[] = communicators.map(communicator => new metricEvaluation(communicator));
+let metrics: metricEvaluation[] = [];
 
 describe('metricEvaluation', () => {
+
+    beforeAll(async () => {
+        const Promise = require('bluebird');
+
+        const connectionsAndCommunicators = await Promise.map(urls, async (url: string) => {
+          const connection = await repoConnection.create(url, token);
+          const communicator = await repoCommunicator.create(connection);
+          return { connection, communicator };
+        }, { concurrency: 10 });
+
+        connectionsAndCommunicators.forEach((pair:any)=>{
+            let metric: metricEvaluation = new metricEvaluation(pair.communicator);
+            metrics.push(metric);
+        })
+    });
+
     test('getCorrectness', () => {
         metrics.forEach(metric => {
             expect(metric.correctness).toBeGreaterThanOrEqual(0);
