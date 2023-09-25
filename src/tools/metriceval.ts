@@ -1,5 +1,6 @@
 import logger from '../logger';
 import { repoCommunicator } from './api';
+import { exec } from 'child_process';
 /**************************************************************************************************
  * metricEvaluation
  * 1. Takes in the communicator class to access repository responses
@@ -40,6 +41,7 @@ export class metricEvaluation {
         this.correctness = parseFloat(this.correctness.toFixed(5));
       }
     }
+    
     getRampUp(){
       if(!this.communicator.contributors || !Array.isArray(this.communicator.contributors)){
         logger.error(`API failed to return Ramp Up (contributor) information for url: ${this.communicator.connection.url}`)
@@ -70,6 +72,7 @@ export class metricEvaluation {
       this.rampUp = parseFloat(this.rampUp.toFixed(5));
       //logger.info(`Ramp Up: ${this.rampUp}`)
     }
+
     getBus(){
       if(!this.communicator.contributors){
         logger.error(`API failed to return Bus Factor (contributor) information for url: ${this.communicator.connection.url}`)
@@ -95,19 +98,32 @@ export class metricEvaluation {
     }
   
     getResponsiveness(){
-      if(!this.communicator.commits){
+
+      //If static analysis worked
+      if(this.communicator.recentCommit){
+        const commitDate = new Date(this.communicator.recentCommit);
+        const today = new Date();
+        const diffInMonths = (today.getFullYear() - commitDate.getFullYear()) * 12 + (today.getMonth() - commitDate.getMonth());
+        this.responsivness = this.threshold_response / Math.max(this.threshold_response, diffInMonths)
+        this.responsivness = parseFloat(this.responsivness.toFixed(5));
+      }
+      else if(!this.communicator.commits){
         logger.error(`API failed to return responsiveness information for url: ${this.communicator.connection.url}`)
         return;
       }
+      //If static analysis did not work, use api
+      else{
         const mostRecentCommit = this.communicator.commits[0];
         const commitDate = new Date(mostRecentCommit.commit.author.date);
         const today = new Date();
         const diffInMonths = (today.getFullYear() - commitDate.getFullYear()) * 12 + (today.getMonth() - commitDate.getMonth());
         this.responsivness = this.threshold_response / Math.max(this.threshold_response, diffInMonths)
         this.responsivness = parseFloat(this.responsivness.toFixed(5));
+      }
       //  logger.info(`Responsivene Maintainer: ${this.responsivness}`)
       
     }
+
   
     getlicense(){
       if(!this.communicator.general){
@@ -129,6 +145,7 @@ export class metricEvaluation {
       this.score = parseFloat(this.score.toFixed(5));
       return this.score;
     }
+
     logAll(){
       const output: object = {"URL": this.communicator.connection.url, "NET_SCORE": this.score, "RAMP_UP_SCORE": this.rampUp, "CORRECTNESS_SCORE": this.correctness, "BUS_FACTOR_SCORE": this.busFactor, "RESPONSIVE_MAINTAINER_SCORE": this.responsivness, "LICENSE_SCORE": this.license
       };
