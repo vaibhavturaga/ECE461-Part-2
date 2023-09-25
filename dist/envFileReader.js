@@ -33,8 +33,3 @@ const readEnv = async () => {
     return { token: token, logLevel: logLevel, logFile: logFile };
 };
 exports.readEnv = readEnv;
-/*export const testEnv = async () => {
-    var env = await readEnv();
-    console.log(env);
-}
-testEnv();*/

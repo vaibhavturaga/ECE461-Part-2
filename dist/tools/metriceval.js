@@ -131,8 +131,8 @@ class metricEvaluation {
         };
         //const outputString: string = `{"URL": ${this.communicator.connection.url}, "NET_SCORE": ${this.score}, "RAMP_UP_SCORE": ${this.rampUp}, "CORRECTNESS_SCORE": ${this.correctness}, "BUS_FACTOR_SCORE": ${this.busFactor}, "RESPONSIVE_MAINTAINER_SCORE": ${this.responsivness}, "LICENSE_SCORE": ${this.license}}`;
         const outputString = JSON.stringify(output, null, 2);
-        //console.log(outputString)
-        logger_1.default.info(outputString);
+        console.log(outputString);
+        //logger.info(outputString)
     }
 }
 exports.metricEvaluation = metricEvaluation;

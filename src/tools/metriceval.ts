@@ -40,6 +40,7 @@ export class metricEvaluation {
         this.correctness = parseFloat(this.correctness.toFixed(5));
       }
     }
+    
     getRampUp(){
       if(!this.communicator.contributors || !Array.isArray(this.communicator.contributors)){
         logger.error(`API failed to return Ramp Up (contributor) information for url: ${this.communicator.connection.url}`)
@@ -70,6 +71,7 @@ export class metricEvaluation {
       this.rampUp = parseFloat(this.rampUp.toFixed(5));
       //logger.info(`Ramp Up: ${this.rampUp}`)
     }
+
     getBus(){
       if(!this.communicator.contributors){
         logger.error(`API failed to return Bus Factor (contributor) information for url: ${this.communicator.connection.url}`)
@@ -129,6 +131,7 @@ export class metricEvaluation {
       this.score = parseFloat(this.score.toFixed(5));
       return this.score;
     }
+
     logAll(){
       const output: object = {"URL": this.communicator.connection.url, "NET_SCORE": this.score, "RAMP_UP_SCORE": this.rampUp, "CORRECTNESS_SCORE": this.correctness, "BUS_FACTOR_SCORE": this.busFactor, "RESPONSIVE_MAINTAINER_SCORE": this.responsivness, "LICENSE_SCORE": this.license
       };
