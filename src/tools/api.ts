@@ -181,9 +181,9 @@ export class repoCommunicator {
   contributors: any[] | null = null;
   commits: any[] | null = null;
   general: any[] | null = null;
-  repositoryURL: string = '';
-  cloneDirectory: string = '';
-  recentCommit: string = '';
+  repositoryURL = '';
+  cloneDirectory = '';
+  recentCommit = '';
   constructor(connection: repoConnection){
     this.connection = connection;
     if(!this.connection.error_occurred){
@@ -226,7 +226,7 @@ export class repoCommunicator {
 
         //console.log(`Recent commit date: ${this.recentCommit}`);
     } catch (error) {
-        logger.error(`Error: ${error}`);
+        logger.error(`${error}`);
     }
 }
 
