@@ -1,4 +1,5 @@
 import * as fsPromise from 'fs/promises';
+import logger from './logger';
 
 export const readURLs = async (fileName: string) => {
     const urls: string[] = [];
@@ -9,15 +10,8 @@ export const readURLs = async (fileName: string) => {
             }
         })
         .catch(() => {
-            console.error(`File not found at: ${fileName}`)
+            logger.error(`File not found at: ${fileName}`)
         });
     return urls;
 };
 
-/*
-export const testURLs = async () => {
-    var urls = await readURLs("C:/Users/hdogg/Desktop/ECE 461/urlFile.txt");
-    console.log(urls);
-}
-
-testURLs();*/
