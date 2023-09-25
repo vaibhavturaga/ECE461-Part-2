@@ -5,22 +5,11 @@ import { describe, test, expect } from '@jest/globals';
 
 describe('URL_FILE', () => {
     // Function to check if a url file exists, if not, create it
-    const ensureLogFileExists = (logFilePath: string) => {
-        if (!fs.existsSync(logFilePath)) {
-            fs.writeFileSync(logFilePath, '');
-        }
-    };
-
     beforeAll(() => {
-        // Ensure the logs directory exists before running the tests
-        const logsDirectory = path.join(__dirname, '../logs');
-        if (!fs.existsSync(logsDirectory)) {
-            fs.mkdirSync(logsDirectory);
+        // Ensure that the LOG_FILE environment variable is set
+        if (!process.env.LOG_FILE) {
+            throw new Error('LOG_FILE environment variable is not defined.');
         }
-
-        // Check and create log files if necessary
-        ensureLogFileExists(path.join(__dirname, '../logs/error.log'));
-        ensureLogFileExists(path.join(__dirname, '../logs/combined.log'));
     });
     
     test('returns correct array', async () => {
@@ -38,7 +27,7 @@ describe('URL_FILE', () => {
         await readURLs('doesNotExist.txt');
 
         // Construct the path to the error.log file
-        const errorLogFilePath = path.join(__dirname, '../logs/error.log');
+        const errorLogFilePath = path.join(__dirname, ('../' + process.env.LOG_FILE) || '');
 
         // Wait for a short time to allow Winston to create and write to the log file
         await new Promise((resolve) => setTimeout(resolve, 100));
