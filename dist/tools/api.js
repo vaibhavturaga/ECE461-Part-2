@@ -1,4 +1,23 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -7,6 +26,9 @@ exports.repoCommunicator = exports.repoConnection = void 0;
 const axios_1 = __importDefault(require("axios"));
 const query_registry_1 = require("query-registry");
 const logger_1 = __importDefault(require("../logger"));
+const child_process_1 = require("child_process");
+const os_1 = require("os");
+const path = __importStar(require("path"));
 /****************************************************************************************************************************************
  * repoConnection
  * 1. takes in url string
@@ -173,6 +195,9 @@ class repoCommunicator {
         this.contributors = null;
         this.commits = null;
         this.general = null;
+        this.repositoryURL = '';
+        this.cloneDirectory = '';
+        this.recentCommit = '';
         this.connection = connection;
         if (!this.connection.error_occurred) {
             this.initializationPromise = this.retrieveAllInfo();
@@ -183,6 +208,7 @@ class repoCommunicator {
             this.getcontributors.bind(this),
             this.getCommits.bind(this),
             this.getGeneral.bind(this),
+            this.getRecentCommitDate.bind(this),
             // Add more async functions as needed
         ];
         try {
@@ -199,6 +225,52 @@ class repoCommunicator {
             return Promise.resolve();
         }
         return this.initializationPromise;
+    }
+    async getRecentCommitDate() {
+        this.repositoryURL = `https://github.com/${this.connection.org}/${this.connection.repo}`;
+        this.cloneDirectory = path.join((0, os_1.tmpdir)(), this.connection.repo);
+        try {
+            // Clone the repository
+            await this.cloneRepository();
+            // Get the date of the first commit
+            await this.getMostRecentCommitDateFromRepository();
+            //console.log(`Recent commit date: ${this.recentCommit}`);
+        }
+        catch (error) {
+            logger_1.default.error(`Error: ${error}`);
+        }
+    }
+    async cloneRepository() {
+        return new Promise((resolve, reject) => {
+            (0, child_process_1.exec)(`git clone ${this.repositoryURL} ${this.cloneDirectory}`, (error, stdout, stderr) => {
+                if (error) {
+                    if (error.message.includes('already exists')) {
+                        resolve(); // Repository already exists, no need to clone again
+                    }
+                    else {
+                        reject(error);
+                    }
+                }
+                else {
+                    resolve();
+                }
+            });
+        });
+    }
+    async getMostRecentCommitDateFromRepository() {
+        return new Promise((resolve, reject) => {
+            (0, child_process_1.exec)(`git --git-dir=${this.cloneDirectory}/.git --work-tree=${this.cloneDirectory} log --format="%ct" -n 1`, (error, stdout, stderr) => {
+                if (error) {
+                    reject(error);
+                }
+                else {
+                    const timestamp = parseInt(stdout.trim(), 10);
+                    const mostRecentCommitDate = new Date(timestamp * 1000);
+                    this.recentCommit = mostRecentCommitDate.toDateString();
+                    resolve();
+                }
+            });
+        });
     }
     async getGeneral() {
         try {

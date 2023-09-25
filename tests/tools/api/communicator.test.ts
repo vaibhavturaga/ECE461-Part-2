@@ -6,9 +6,6 @@ import * as dotenv from 'dotenv'
 
 // globals
 const urls: string[] = ['https://www.npmjs.com/package/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://www.npmjs.com/package/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash'];
-const githubUrls: string[] = ['https://github.com/browserify/browserify', 'https://github.com/cloudinary/cloudinary_npm', 'https://github.com/expressjs/express', 'https://github.com/nullivex/nodist', 'https://github.com/lodash/lodash'];
-const repos: string[] = ['browserify', 'cloudinary_npm', 'express', 'nodist', 'lodash'];
-const orgs: string[] = ['browserify', 'cloudinary', 'expressjs', 'nullivex', 'lodash'];
 
 process.env.DOTENV_CONFIG_PATH = '../../../.env';
 dotenv.config();
