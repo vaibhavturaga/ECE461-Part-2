@@ -16,7 +16,7 @@ describe('URL_FILE', () => {
         let testArray = ["https://www.npmjs.com/package/is-regex", "https://www.npmjs.com/package/path-to-regexp", "https://www.npmjs.com/package/escape-string-regexp", "https://github.com/es-shims/RegExp.prototype.flags", "https://github.com/ljharb/safe-regex-test", "https://github.com/npm/hosted-git-info", "https://www.npmjs.com/package/@octokit/rest"]
 
         // Grab the urls
-        let urls = await readURLs(path.join(__dirname, '../tests/urlTestFile.txt'));
+        let urls = await readURLs('tests/urlTestFile.txt');
 
         // Expect that the return array contains the urls
         expect(JSON.stringify(urls)).toBe(JSON.stringify(testArray));
