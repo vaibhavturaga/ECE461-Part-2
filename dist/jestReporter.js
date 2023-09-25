@@ -55,16 +55,16 @@ class CustomReporter {//} extends CoverageReporter{
     // await this._addUntestedFiles(testContexts);
     // const {map, reportContext} = await this._getCoverageResult();
   
-    if (results.coverageMap) {
-      const coverage = results.coverageMap.getCoverageSummary();
-      const totalCoverage = (
-        (coverage.lines.pct + coverage.branches.pct + coverage.functions.pct + coverage.statements.pct) / 4
-      ).toFixed(2);
-      console.log(`Coverage: ${totalCoverage}%`);
-      console.log(`${passedTests}/${totalTests} test cases passed. ${totalCoverage}% line coverage achieved.`);
-    } else {
-      console.log(`${passedTests}/${totalTests} test cases passed.`);
-    }
+    // if (results.coverageMap) {
+    const coverage = results.coverageMap.getCoverageSummary();
+    const totalCoverage = (
+      (coverage.lines.pct + coverage.branches.pct + coverage.functions.pct + coverage.statements.pct) / 4
+    ).toFixed(2);
+    console.log(`Coverage: ${totalCoverage}%`);
+    console.log(`${passedTests}/${totalTests} test cases passed. ${totalCoverage}% line coverage achieved.`);
+    // } else {
+    //   console.log(`${passedTests}/${totalTests} test cases passed.`);
+    // }
   }  
 }
 

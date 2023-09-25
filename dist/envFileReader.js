@@ -1,4 +1,5 @@
 "use strict";
+<<<<<<< HEAD
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
@@ -69,11 +70,19 @@ const readEnv = () => __awaiter(void 0, void 0, void 0, function* () {
         .catch(() => {
         console.error(`.env file not found`);
     });
+=======
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.readEnv = void 0;
+const readEnv = async () => {
+    let token = "";
+    let logLevel = "";
+    let logFile = "";
+    const dotenv = require('dotenv');
+    dotenv.config({ path: '.env' });
+    token = process.env.GITHUB_TOKEN;
+    logLevel = process.env.LOG_LEVEL;
+    logFile = process.env.LOG_FILE;
+>>>>>>> ben_api_communication
     return { token: token, logLevel: logLevel, logFile: logFile };
 });
 exports.readEnv = readEnv;
-/*export const testEnv = async () => {
-    var env = await readEnv();
-    console.log(env);
-}
-testEnv();*/

@@ -46,18 +46,47 @@ const logger_1 = __importDefault(require("../logger"));
 */
 class repoConnection {
     constructor(url, githubkey) {
-        this.urlFromFile = null;
         this.error_occurred = false;
         this.initializationPromise = null;
-        this.urlFromFile = url;
         this.githubkey = githubkey;
-        this.url = null;
+        this.url = url;
         this.repo = '';
         this.org = '';
         this.initializationPromise = this.initialize(url);
     }
+<<<<<<< HEAD
     initialize(url) {
         return __awaiter(this, void 0, void 0, function* () {
+=======
+    async initialize(url) {
+        try {
+            const processedUrl = await this.processUrl(url);
+            if (processedUrl) {
+                const urlParts = processedUrl.split('/');
+                this.org = urlParts[urlParts.length - 2];
+                this.repo = urlParts[urlParts.length - 1].split('.')[0];
+                this.url = processedUrl;
+            }
+            else {
+                logger_1.default.error(`Initialization failed: Github URL not Found. for ${this.url}`);
+                this.error_occurred = true;
+            }
+        }
+        catch (error) {
+            logger_1.default.error(`${error}`); // Rethrow the error to propagate it to the caller
+            this.error_occurred = true;
+        }
+    }
+    //This can be called from other functions when first initializing the class to know when initilization is complete. example code for when intializing instance
+    async waitForInitialization() {
+        if (!this.initializationPromise) {
+            return Promise.resolve();
+        }
+        return this.initializationPromise;
+    }
+    async processUrl(url) {
+        if (url.includes("npmjs")) {
+>>>>>>> ben_api_communication
             try {
                 const processedUrl = yield this.processUrl(url);
                 if (processedUrl) {
@@ -123,7 +152,17 @@ class repoConnection {
                 logger_1.default.error(`Failed to get information about npm repository: ${this.url}`);
                 return null;
             }
+<<<<<<< HEAD
         });
+=======
+            return null;
+        }
+        catch (_a) {
+            logger_1.default.error(`Failed to get information about npm repository: ${this.url}`);
+            this.error_occurred = true;
+            return null;
+        }
+>>>>>>> ben_api_communication
     }
     // ex goal: https://api.github.com/repos/browserify/browserify
     // ex endpoint: '/commits', '', '/issues?state=closed', '/issues?state=open'
