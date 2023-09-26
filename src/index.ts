@@ -43,10 +43,10 @@ program
     .command('test')
     .description('Run tests')
     .action(() => {
-        console.log('Running tests...');
+        // console.log('Running tests...');
         // Your test logic here
         try {
-            execSync(`npx jest --coverage`, { stdio: 'inherit' });
+            execSync(`cd ../ && npx jest --silent --coverage --coverageReporters=json-summary --config jest.config.custom.js`, { stdio: 'inherit' });
         } catch (error) {
             if (error instanceof Error) {
                 console.error(`Error running tests: ${error.message}`);

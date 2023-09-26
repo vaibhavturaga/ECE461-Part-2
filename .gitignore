@@ -5,3 +5,5 @@ node_modules/
 coverage/
 logs/
 package-lock.json
+checker.py
+helper.py

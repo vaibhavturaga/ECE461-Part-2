@@ -19,7 +19,8 @@
     "commander": "^11.0.0",
     "typescript": "^5.2.2",
     "winston": "^3.10.0",
-    "test": "jest"
+    "test": "npx jest --detectOpenHandles --config jest.config.js",
+    "test-custom": "npx jest --silent --detectOpenHandles --coverage --coverageReporters=json-summary --config jest.config.custom.js"
   },
   "devDependencies": {
     "@types/jest": "^29.5.5",
