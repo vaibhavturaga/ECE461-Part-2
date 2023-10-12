@@ -3,6 +3,7 @@ import {repoCommunicator} from '../../src/tools/api';
 import {repoConnection} from '../../src/tools/api';
 import {describe, test, expect, beforeAll} from '@jest/globals';
 import * as dotenv from 'dotenv'
+import { freemem } from 'os';
 
 process.env.DOTENV_CONFIG_PATH = '../../../.env';
 dotenv.config();
@@ -20,16 +21,19 @@ describe('metricEvaluation', () => {
     beforeAll(async () => {
         const Promise = require('bluebird');
 
-        const connectionsAndCommunicators = await Promise.map(urls, async (url: string) => {
-          const connection = await repoConnection.create(url, token);
-          const communicator = await repoCommunicator.create(connection);
-          return { connection, communicator };
-        }, { concurrency: 10 });
+        const connectionsAndCommunicators = await Promise.all(
+        urls.map(async (url: string) => {
+            const connection = await repoConnection.create(url, token);
+            const communicator = await repoCommunicator.create(connection);
+            return { connection, communicator };
+        })
+        );
 
-        connectionsAndCommunicators.forEach((pair:any)=>{
+        connectionsAndCommunicators.forEach(async (pair: any) => {
             let metric: metricEvaluation = new metricEvaluation(pair.communicator);
             metrics.push(metric);
-        })
+        });
+        
     });
 
     test('getCorrectness', () => {
@@ -73,3 +77,5 @@ describe('metricEvaluation', () => {
         });
     });  
 });
+
+metrics.forEach(() => {freemem();})

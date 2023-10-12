@@ -38,7 +38,7 @@ class Logger {
     constructor() {
         this.logLevel = this.getLogLevelFromEnv();
         this.logFileName = process.env.LOG_FILE;
-        // Check if LOG_FILE and ERROR_LOG are defined; exit with code 0 if not
+        // Check if LOG_FILE is defined; exit with code 1 if not
         if (!this.logFileName) {
             process.exit(1);
         }
@@ -121,3 +121,4 @@ class Logger {
 }
 // Export a singleton instance of the Logger
 exports.default = new Logger();
+//# sourceMappingURL=logger.js.map

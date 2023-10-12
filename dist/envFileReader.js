@@ -1,7 +1,16 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readEnv = void 0;
-const readEnv = async () => {
+const readEnv = () => __awaiter(void 0, void 0, void 0, function* () {
     let token = "";
     let logLevel = "";
     let logFile = "";
@@ -10,26 +19,7 @@ const readEnv = async () => {
     token = process.env.GITHUB_TOKEN;
     logLevel = process.env.LOG_LEVEL;
     logFile = process.env.LOG_FILE;
-    /*
-    await fsPromise.open("./.env", 'r')
-        .then(async (response) => {
-            for await (const line of response.readLines()){
-                if(line.includes("GITHUB_TOKEN=")){
-                    token = line.replace("GITHUB_TOKEN=", "");
-                }
-                else if(line.includes("LOG_LEVEL=")){
-                    logLevel = line.replace("LOG_LEVEL=", "");
-                }
-                else if(line.includes("LOG_FILE=")){
-                    logFile = line.replace("LOG_FILE=", "");
-                }
-            }
-        })
-        .catch(() => {
-            console.error(`.env file not found`)
-            process.exit(1);
-        });
-        */
     return { token: token, logLevel: logLevel, logFile: logFile };
-};
+});
 exports.readEnv = readEnv;
+//# sourceMappingURL=envFileReader.js.map

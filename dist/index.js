@@ -1,5 +1,14 @@
 #!/usr/bin/env node
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_1 = require("child_process");
 const commander_1 = require("commander");
@@ -31,21 +40,21 @@ program
 });
 program
     .argument('<URL_FILE>', 'Absolute file location to file containing URLs')
-    .action(async (urlFile) => {
+    .action((urlFile) => __awaiter(void 0, void 0, void 0, function* () {
     //console.log(`Processing URL file: ${urlFile}`);
     // Your URL file processing logic here
-    const env_var = await (0, envFileReader_1.readEnv)();
-    const urlList = await (0, urlFileReader_1.readURLs)(urlFile);
-    await (0, script_1.beginEvaluation)(urlList, env_var.token);
-});
+    const env_var = yield (0, envFileReader_1.readEnv)();
+    const urlList = yield (0, urlFileReader_1.readURLs)(urlFile);
+    yield (0, script_1.beginEvaluation)(urlList, env_var.token);
+}));
 program
     .command('test')
     .description('Run tests')
     .action(() => {
-    console.log('Running tests...');
+    // console.log('Running tests...');
     // Your test logic here
     try {
-        (0, child_process_1.execSync)(`npx jest --coverage`, { stdio: 'inherit' });
+        (0, child_process_1.execSync)(`cd ../ && npx jest --silent --coverage --coverageReporters='json-summary' --config jest.config.custom.js`, { stdio: 'inherit' });
     }
     catch (error) {
         if (error instanceof Error) {
@@ -59,3 +68,4 @@ program
 });
 //console.log('Parsing Arguments')
 program.parse(process.argv);
+//# sourceMappingURL=index.js.map
