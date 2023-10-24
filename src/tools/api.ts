@@ -39,7 +39,8 @@ export class repoConnection{
   org: string;
   error_occurred: boolean = false;
   private initializationPromise: Promise<void> | null = null;
-  
+
+
   constructor(url: string, githubkey: string) {
     this.githubkey = githubkey;
     this.url = url;
@@ -184,6 +185,8 @@ export class repoCommunicator {
   repositoryURL = '';
   cloneDirectory = '';
   recentCommit = '';
+  dependencies: any[] | null = null;
+  pullRequests: any[] | null = null;
   constructor(connection: repoConnection){
     this.connection = connection;
     if(!this.connection.error_occurred){
@@ -300,4 +303,35 @@ export class repoCommunicator {
     await instance.waitForInitialization();
     return instance;
   }
+  async fetchDependencies(): Promise<void> {
+    try {
+      const response = await this.connection.queryGithubapi('/dependencies');
+      if (response) {
+        this.dependencies = response.data;
+      } else {
+        logger.error(`Failed to fetch dependency data: ${this.connection.url}`);
+        this.dependencies = null;
+      }
+    } catch (error) {
+      logger.error(`Failed to fetch dependency data: ${error}`);
+      this.dependencies = null;
+    }
+  }
+    
+  async fetchPullRequests(): Promise<void> {
+    try {
+      const response = await this.connection.queryGithubapi('/pulls');
+      if (response) {
+        this.pullRequests = response.data;
+      } else {
+        logger.error(`Failed to fetch pull request data: ${this.connection.url}`);
+        this.pullRequests = null;
+      }
+    } catch (error) {
+      logger.error(`Failed to fetch pull request data: ${error}`);
+      this.pullRequests = null;
+    }
+  }
+
+
 }
