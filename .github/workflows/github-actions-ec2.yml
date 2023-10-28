@@ -1,38 +1,32 @@
-name: Push-to-EC2
+name: Deploy to EC2
 
-# Trigger deployment only on push to main branch
 on:
   push:
     branches:
-      - main
+      - main  # Change this to your main branch
 
 jobs:
   deploy:
-    name: Deploy to EC2 on master branch push
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout the files
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Deploy to Server 1
-        uses: easingthemes/ssh-deploy@main
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.HOST_DNS }}
-          REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: ${{ secrets.TARGET_DIR }}
+    - name: Set up SSH key
+      run: |
+        echo "$EC2_SSH_KEY" > deploy_key.pem
+        chmod 600 deploy_key.pem
+        ssh-keyscan -H $HOST_DNS >> ~/.ssh/known_hosts
+      env:
+        EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        HOST_DNS: ${{ secrets.HOST_DNS }}
 
-      - name: Executing remote ssh commands using ssh key
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST_DNS }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            sudo apt-get -y update
-            sudo apt-get install -y apache2
-            sudo systemctl start apache2
-            sudo systemctl enable apache2
-            cd home
-            sudo mv * /var/www/html
+    - name: Deploy code to EC2
+      run: |
+        ssh -i deploy_key.pem $USERNAME@$HOST_DNS "cd $TARGET_DIR && git pull"
+      env:
+        EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        HOST_DNS: ${{ secrets.HOST_DNS }}
+        TARGET_DIR: ${{ secrets.TARGET_DIR }}
+        USERNAME: ${{ secrets.USERNAME }}
