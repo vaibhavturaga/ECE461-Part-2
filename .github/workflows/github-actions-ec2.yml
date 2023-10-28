@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout the files
         uses: actions/checkout@v2
+        with:
+          node-version: 16  # Specify Node.js version 16
 
       - name: Deploy to Server 1
         uses: easingthemes/ssh-deploy@main
@@ -35,5 +37,4 @@ jobs:
             sudo systemctl start apache2
             sudo systemctl enable apache2
             cd /path/to/main/github/repo/ # Replace with the actual path to your GitHub repository on the EC2 instance
-            sudo cp -r frontend/* /var/www/html/ # Copy the contents of the "frontend" folder to the web server's document root
-      
+            sudo cp -r frontend/* /var/www/html/
