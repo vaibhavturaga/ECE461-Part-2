@@ -25,9 +25,10 @@ jobs:
 
     - name: Deploy code to EC2
       run: |
-        ssh -i deploy_key.pem $USERNAME@$HOST_DNS "cd $TARGET_DIR && git pull"
+        ssh -i deploy_key.pem $USERNAME@$HOST_DNS "cd $TARGET_DIR && git pull https://USERNAME:TOKEN@github.com/USERNAME/REPO.git main"
       env:
         EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         HOST_DNS: ${{ secrets.HOST_DNS }}
         TARGET_DIR: ${{ secrets.TARGET_DIR }}
         USERNAME: ${{ secrets.USERNAME }}
+        TOKEN: ${{ secrets.GITHUB_PAT }} # Make sure you have this secret defined in your GitHub repository settings
