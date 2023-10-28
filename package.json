@@ -23,7 +23,7 @@
     "test-custom": "npx jest --silent --detectOpenHandles --coverage --coverageReporters='json-summary' --config jest.config.custom.js"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.5",
+    "@types/jest": "^29.5.6",
     "@types/winston": "^2.4.4",
     "jest": "^29.7.0",
     "jest-stare": "^2.5.1",

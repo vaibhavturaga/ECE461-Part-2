@@ -19,9 +19,6 @@ export class metricEvaluation {
     rampUp: number = 0;
     correctness: number = 0;
     score: number = 0;
-    pinnedDependencyFraction: number = 0;
-    codeIntroducedThroughPullRequestsFraction: number = 0;
-
     constructor(communicator: repoCommunicator){
       this.communicator = communicator;
       this.getBus();
@@ -29,36 +26,9 @@ export class metricEvaluation {
       this.getCorrectness();
       this.getResponsiveness()
       this.getlicense();
-      this.getPinnedDependencyFraction();
-      this.getCodeIntroducedThroughPullRequestsFraction();
       this.netScore();
     }
-    //WIP
-    getPinnedDependencyFraction() {
-      if (!this.communicator.dependencies) {
-        logger.error(`API failed to return dependency information for url: ${this.communicator.connection.url}`);
-        return 0;
-      }
   
-      const dependencies = this.communicator.dependencies;
-      const pinnedDependencies = dependencies.filter(dependency => {
-        return dependency.pinnedToSpecificVersion;
-      });
-  
-      return pinnedDependencies.length / dependencies.length || 0;
-    }
-    getCodeIntroducedThroughPullRequestsFraction() {
-      if (!this.communicator.pullRequests) {
-        logger.error(`API failed to return pull request information for url: ${this.communicator.connection.url}`);
-        return 0;
-      }
-  
-      const pullRequests = this.communicator.pullRequests;
-      const reviewedPullRequests = pullRequests.filter(pr => pr.hasCodeReview);
-  
-      return reviewedPullRequests.length / pullRequests.length || 0;
-    }
-
     getCorrectness(){
       if(!this.communicator.general){
         logger.error(`API failed to return Correctness information for url: ${this.communicator.connection.url}`)
@@ -68,7 +38,7 @@ export class metricEvaluation {
         const open_issues: any = this.communicator.general['open_issues_count'];
         const watchers_count: any = this.communicator.general['watchers_count'];
         this.correctness = Math.max(1 - Math.log(open_issues) / Math.log(watchers_count), 0)
-        this.correctness = parseFloat(this.correctness.toFixed(5));
+        this.correctness = parseFloat(this.correctness.toFixed(5)) || 0;
       }
     }
     
@@ -169,20 +139,25 @@ export class metricEvaluation {
       
     }
   
-    //TODO: Update weighting
     netScore(){
-      this.score = 0.2 * this.busFactor + 0.3 * this.responsivness + 0.1 * this.license + 0.1 * this.rampUp + 0.3 * this.correctness + .1 * this.pinnedDependencyFraction + .1 * 0.1 * this.codeIntroducedThroughPullRequestsFraction;
+      this.score = 0.2 * this.busFactor + 0.3 * this.responsivness + 0.1 * this.license + 0.1 * this.rampUp + 0.3 * this.correctness;
      // logger.info(`Net Score: ${this.score}`)
       this.score = parseFloat(this.score.toFixed(5));
       return this.score;
     }
 
     logAll(){
-      const output: object = {"URL": this.communicator.connection.url, "NET_SCORE": this.score, "RAMP_UP_SCORE": this.rampUp, "CORRECTNESS_SCORE": this.correctness, "BUS_FACTOR_SCORE": this.busFactor, "RESPONSIVE_MAINTAINER_SCORE": this.responsivness, "LICENSE_SCORE": this.license, "DEPENDENCY": this.pinnedDependencyFraction, "PULLREQ" : this.codeIntroducedThroughPullRequestsFraction
+      const logEntry = {
+        "URL": this.communicator.connection.original_url,
+        "NET_SCORE": this.score,
+        "RAMP_UP_SCORE": this.rampUp,
+        "CORRECTNESS_SCORE": this.correctness,
+        "BUS_FACTOR_SCORE": this.busFactor,
+        "RESPONSIVE_MAINTAINER_SCORE": this.responsivness,
+        "LICENSE_SCORE": this.license
       };
-      //const outputString: string = `{"URL": ${this.communicator.connection.url}, "NET_SCORE": ${this.score}, "RAMP_UP_SCORE": ${this.rampUp}, "CORRECTNESS_SCORE": ${this.correctness}, "BUS_FACTOR_SCORE": ${this.busFactor}, "RESPONSIVE_MAINTAINER_SCORE": ${this.responsivness}, "LICENSE_SCORE": ${this.license}}`;
-      const outputString:string = JSON.stringify(output, null, 2)
-      console.log(outputString)
-      //logger.info(outputString)
+    
+      const logEntryString = JSON.stringify(logEntry);
+      logger.info(logEntryString);
     }
   }
