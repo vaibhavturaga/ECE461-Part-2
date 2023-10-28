@@ -25,7 +25,7 @@ jobs:
 
     - name: Deploy code to EC2
       run: |
-        ssh -i deploy_key.pem $vaibhavturaga@$HOST_DNS "cd $TARGET_DIR && git pull https://vaibhavturaga:TOKEN@github.com/vaibhavturaga/ECE461-Part-2.git main"
+        ssh -i deploy_key.pem $vaibhavturaga@$HOST_DNS "cd $TARGET_DIR && git pull https://vaibhavturaga:TOKEN@github.com/vaibhavturaga/ECE461-Part-2.git origin main"
       env:
         EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         HOST_DNS: ${{ secrets.HOST_DNS }}
