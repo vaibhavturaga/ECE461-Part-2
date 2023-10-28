@@ -25,10 +25,9 @@ jobs:
 
     - name: Deploy code to EC2
       run: |
-        ssh -i deploy_key.pem $vaibhavturaga@$HOST_DNS "cd $TARGET_DIR && git pull https://vaibhavturaga:TOKEN@github.com/vaibhavturaga/ECE461-Part-2.git origin main"
+        ssh -i deploy_key.pem $USERNAME@$HOST_DNS "cd $TARGET_DIR && git pull origin main"
       env:
         EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         HOST_DNS: ${{ secrets.HOST_DNS }}
         TARGET_DIR: ${{ secrets.TARGET_DIR }}
         USERNAME: ${{ secrets.USERNAME }}
-        TOKEN: ${{ secrets.PAT }} # Make sure you have this secret defined in your GitHub repository settings
