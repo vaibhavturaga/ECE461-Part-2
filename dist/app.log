@@ -1,1 +1,24 @@
-{"URL":"https://github.com/lodash/lodash","NET_SCORE":0.75542,"RAMP_UP_SCORE":1,"CORRECTNESS_SCORE":0.71808,"BUS_FACTOR_SCORE":0.2,"RESPONSIVE_MAINTAINER_SCORE":1,"LICENSE_SCORE":1}
+Failed to get information about npm repository: https://www.npmjs.com/package/extremplafe
+Initialization failed: Github URL not Found. for https://www.npmjs.com/package/extremplafe
+{"URL":"https://www.npmjs.com/package/browserify","NET_SCORE":0.40019,"RAMP_UP_SCORE":1,"CORRECTNESS_SCORE":0.37608,"BUS_FACTOR_SCORE":0.2,"RESPONSIVE_MAINTAINER_SCORE":0.15789,"LICENSE_SCORE":1}
+API failed to return Bus Factor (contributor) information for url: https://www.npmjs.com/package/extremplafe
+{"URL":"https://github.com/cloudinary/cloudinary_npm","NET_SCORE":0.70132,"RAMP_UP_SCORE":0.74256,"CORRECTNESS_SCORE":0.55687,"BUS_FACTOR_SCORE":0.8,"RESPONSIVE_MAINTAINER_SCORE":1,"LICENSE_SCORE":0}
+{"URL":"https://www.npmjs.com/package/extremplafe","NET_SCORE":0,"RAMP_UP_SCORE":0,"CORRECTNESS_SCORE":0,"BUS_FACTOR_SCORE":0,"RESPONSIVE_MAINTAINER_SCORE":0,"LICENSE_SCORE":0}
+{"URL":"https://github.com/nullivex/nodist","NET_SCORE":0.41893,"RAMP_UP_SCORE":0.3643,"CORRECTNESS_SCORE":0.475,"BUS_FACTOR_SCORE":0.2,"RESPONSIVE_MAINTAINER_SCORE":0.33333,"LICENSE_SCORE":1}
+{"URL":"https://github.com/lodash/lodash","NET_SCORE":0.75304,"RAMP_UP_SCORE":1,"CORRECTNESS_SCORE":0.71015,"BUS_FACTOR_SCORE":0.2,"RESPONSIVE_MAINTAINER_SCORE":1,"LICENSE_SCORE":1}
+API failed to return Ramp Up (contributor) information for url: https://www.npmjs.com/package/extremplafe
+API failed to return Correctness information for url: https://www.npmjs.com/package/extremplafe
+API failed to return responsiveness information for url: https://www.npmjs.com/package/extremplafe
+API failed to return clicense information for url: https://www.npmjs.com/package/extremplafe
+Failed to get information about npm repository: https://www.npmjs.com/package/extremplafe
+Initialization failed: Github URL not Found. for https://www.npmjs.com/package/extremplafe
+{"URL":"https://www.npmjs.com/package/browserify","NET_SCORE":0.40019,"RAMP_UP_SCORE":1,"CORRECTNESS_SCORE":0.37608,"BUS_FACTOR_SCORE":0.2,"RESPONSIVE_MAINTAINER_SCORE":0.15789,"LICENSE_SCORE":1}
+API failed to return Bus Factor (contributor) information for url: https://www.npmjs.com/package/extremplafe
+{"URL":"https://github.com/cloudinary/cloudinary_npm","NET_SCORE":0.70132,"RAMP_UP_SCORE":0.74256,"CORRECTNESS_SCORE":0.55687,"BUS_FACTOR_SCORE":0.8,"RESPONSIVE_MAINTAINER_SCORE":1,"LICENSE_SCORE":0}
+{"URL":"https://www.npmjs.com/package/extremplafe","NET_SCORE":0,"RAMP_UP_SCORE":0,"CORRECTNESS_SCORE":0,"BUS_FACTOR_SCORE":0,"RESPONSIVE_MAINTAINER_SCORE":0,"LICENSE_SCORE":0}
+{"URL":"https://github.com/nullivex/nodist","NET_SCORE":0.41893,"RAMP_UP_SCORE":0.3643,"CORRECTNESS_SCORE":0.475,"BUS_FACTOR_SCORE":0.2,"RESPONSIVE_MAINTAINER_SCORE":0.33333,"LICENSE_SCORE":1}
+{"URL":"https://github.com/lodash/lodash","NET_SCORE":0.75304,"RAMP_UP_SCORE":1,"CORRECTNESS_SCORE":0.71015,"BUS_FACTOR_SCORE":0.2,"RESPONSIVE_MAINTAINER_SCORE":1,"LICENSE_SCORE":1}
+API failed to return Ramp Up (contributor) information for url: https://www.npmjs.com/package/extremplafe
+API failed to return Correctness information for url: https://www.npmjs.com/package/extremplafe
+API failed to return responsiveness information for url: https://www.npmjs.com/package/extremplafe
+API failed to return clicense information for url: https://www.npmjs.com/package/extremplafe

@@ -5,6 +5,10 @@ import { Command } from 'commander';
 import { readURLs } from './urlFileReader';
 import { beginEvaluation } from './tools/script';
 import { readEnv } from './envFileReader';
+import logger from './logger';
+
+logger.info('Application started.');
+
 const program = new Command();
 //testing ci
 program
