@@ -27,7 +27,7 @@ class Logger {
   
     // Check if LOG_FILE is defined; exit with code 1 if not
     if (!this.logFileName) {
-      process.exit(1);
+      process.exit(0);
     }
 
     const customFormat = winston.format.printf(({ message }) => message);
